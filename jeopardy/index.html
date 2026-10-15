@@ -72,6 +72,12 @@
   .clue-head .val { color: var(--accent); }
   .clue-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 28px; padding: 16px; }
   .question { font-size: clamp(26px, 4.6vw, 64px); font-weight: 800; line-height: 1.2; max-width: 1200px; text-transform: uppercase; text-shadow: 0 3px 0 rgba(0,0,0,0.35); }
+  .clue-img { max-height: 48vh; max-width: min(80vw, 900px); object-fit: contain; filter: drop-shadow(0 6px 0 rgba(0,0,0,0.35)); }
+  .clue-body.has-img .question { font-size: clamp(22px, 3.4vw, 44px); }
+  select {
+    font: inherit; font-size: 15px; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--bg2); color: var(--text);
+  }
   .answer { font-size: clamp(22px, 3.6vw, 48px); font-weight: 800; color: var(--accent); }
   .dd { font-size: clamp(48px, 10vw, 140px); font-weight: 800; color: var(--accent); text-shadow: 0 6px 0 rgba(0,0,0,0.4); animation: pop 0.6s ease-out; }
   @keyframes pop { from { transform: scale(0.3) rotate(-8deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
@@ -135,6 +141,7 @@
   <div class="clue-head"><span id="clueCat"></span><span class="val" id="clueVal"></span></div>
   <div class="clue-body">
     <div class="dd hidden" id="ddSplash">DAILY DOUBLE!</div>
+    <img class="clue-img hidden" id="clueImg" alt="Picture for this question">
     <div class="question hidden" id="clueQ"></div>
     <div class="answer hidden" id="clueA"></div>
   </div>
@@ -184,7 +191,8 @@
         <button class="ghost" id="exportBtn">⬇ Download questions file</button>
         <button class="ghost" id="importBtn">⬆ Load questions file</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden">
-        <button class="danger" id="sampleBtn">Restore sample questions</button>
+        <select id="setSel" aria-label="Ready-made question set"></select>
+        <button class="ghost" id="sampleBtn">Load ready-made set</button>
       </div>
       <div><button id="saveBtn">Save questions</button></div>
     </div>
@@ -202,8 +210,38 @@
   const VALUES = [100, 200, 300, 400, 500];
   const N_CATS = 4;
 
-  // ---------- Sample questions (original, written for the team) ----------
+  // ---------- Ready-made question sets (original, written for the team) ----------
   const SAMPLE = {
+    title: 'Big Bang Jeopardy',
+    dailyDouble: { c: 2, r: 3 },
+    categories: [
+      { name: '2026 in Review', clues: [
+        { q: 'This country won the 2026 FIFA World Cup, beating Argentina 1-0 in the final.', a: 'Spain' },
+        { q: 'The 2026 Eurovision Song Contest was held in this capital city.', a: 'Vienna' },
+        { q: 'This country topped the 2026 Winter Olympics medal table with a record 18 gold medals.', a: 'Norway' },
+        { q: 'On Artemis II in April 2026, Jeremy Hansen became the first person from this country to travel around the Moon.', a: 'Canada' },
+        { q: 'Dara\'s song "Bangaranga" won Eurovision 2026, giving this country its first ever win.', a: 'Bulgaria' } ] },
+      { name: 'Screen & Sound 2026', clues: [
+        { q: 'This web-slinging superhero\'s film "Brand New Day" is the biggest box office hit of 2026.', a: 'Spider-Man' },
+        { q: 'Woody and Buzz returned in summer 2026 in the fifth film of this Pixar series.', a: 'Toy Story' },
+        { q: '"The Odyssey", one of 2026\'s biggest films, is based on an epic poem by this ancient Greek poet.', a: 'Homer' },
+        { q: 'This Puerto Rican star won the 2026 Grammy for Album of the Year, the first ever for a Spanish-language album.', a: 'Bad Bunny' },
+        { q: 'Jessie Buckley won the 2026 Oscar for Best Actress, the first winner in that category from this country.', a: 'Ireland' } ] },
+      { name: 'Name That Country', clues: [
+        { q: 'Name this country.', a: 'Italy', img: 'img/italy.svg' },
+        { q: 'Name this country.', a: 'Chile', img: 'img/chile.svg' },
+        { q: 'Name this country.', a: 'Japan', img: 'img/japan.svg' },
+        { q: 'Name this country.', a: 'India', img: 'img/india.svg' },
+        { q: 'Name this country.', a: 'Iceland', img: 'img/iceland.svg' } ] },
+      { name: 'Food & Drink', clues: [
+        { q: 'Guacamole is made mainly from this fruit.', a: 'Avocado' },
+        { q: 'This Italian dessert\'s name translates as "pick me up".', a: 'Tiramisu' },
+        { q: 'Paella originally comes from this Spanish city and region.', a: 'Valencia' },
+        { q: 'Taken from the crocus flower, this is the most expensive spice in the world by weight.', a: 'Saffron' },
+        { q: 'This country is the world\'s biggest producer of coffee.', a: 'Brazil' } ] }
+    ]
+  };
+  const GENERAL = {
     title: 'Big Bang Jeopardy',
     dailyDouble: { c: 2, r: 3 },
     categories: [
@@ -233,6 +271,10 @@
         { q: 'Beethoven completed this many symphonies.', a: 'Nine' } ] }
     ]
   };
+  const SETS = [
+    { name: '2026 in Review + Name That Country', data: SAMPLE },
+    { name: 'General knowledge', data: GENERAL }
+  ];
 
   const clone = o => JSON.parse(JSON.stringify(o));
   let game = store.get('bbj-game') || clone(SAMPLE);
@@ -292,6 +334,8 @@
     $('clueVal').textContent = dd ? `Daily Double · ${current.value} pts` : VALUES[r];
     $('clueQ').textContent = clue.q || '(No question written yet)';
     $('clueA').textContent = clue.a || '(No answer written yet)';
+    if (clue.img) $('clueImg').src = clue.img; else $('clueImg').removeAttribute('src');
+    document.querySelector('.clue-body').classList.toggle('has-img', !!clue.img);
     $('clueView').classList.remove('hidden');
     renderStep();
   }
@@ -300,6 +344,7 @@
     const s = current.step;
     $('ddSplash').classList.toggle('hidden', s !== 'dd');
     $('clueQ').classList.toggle('hidden', s === 'dd');
+    $('clueImg').classList.toggle('hidden', s === 'dd' || !$('clueImg').getAttribute('src'));
     $('clueA').classList.toggle('hidden', s !== 'answer');
     $('nextBtn').classList.toggle('hidden', s === 'answer');
     $('nextBtn').textContent = s === 'dd' ? 'Show question' : 'Reveal answer';
@@ -406,7 +451,10 @@
         q.oninput = () => clue.q = q.value;
         const a = document.createElement('input'); a.value = clue.a; a.placeholder = 'Answer';
         a.oninput = () => clue.a = a.value;
-        row.append(top, q, a);
+        const img = document.createElement('input'); img.value = clue.img || '';
+        img.placeholder = 'Picture link (optional)'; img.style.marginTop = '6px'; img.style.fontSize = '13px';
+        img.oninput = () => { if (img.value.trim()) clue.img = img.value.trim(); else delete clue.img; };
+        row.append(top, q, a, img);
         box.appendChild(row);
       });
       grid.appendChild(box);
@@ -426,9 +474,11 @@
     $('edMsg').textContent = 'Saved!';
     setTimeout(closeOverlays, 500);
   };
+  SETS.forEach((s, i) => { const o = document.createElement('option'); o.value = i; o.textContent = s.name; $('setSel').appendChild(o); });
   $('sampleBtn').onclick = () => {
-    if (!confirm('Replace all questions with the sample set? Download a copy first if you want to keep yours.')) return;
-    draft = clone(SAMPLE); renderEditor(); $('edMsg').textContent = 'Sample questions loaded. Click Save to use them.';
+    const set = SETS[+$('setSel').value];
+    if (!confirm(`Replace all questions with "${set.name}"? Download a copy first if you want to keep yours.`)) return;
+    draft = clone(set.data); renderEditor(); $('edMsg').textContent = `"${set.name}" loaded. Click Save to use it.`;
   };
   $('exportBtn').onclick = () => {
     const blob = new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' });

@@ -16,5 +16,7 @@ Games for the Wazoku Friday Big Bang. They're hosted free on GitHub Pages, with 
 - **Scores (optional):** in **🏆 Scores**, add players. After revealing an answer, click the name of whoever got it to give them the points. You can also adjust scores with the +100 and −100 buttons.
 - **Editing:** use **✏️ Edit questions** to change the title, categories, questions and answers, and to pick the Daily Double (or use **🎲 Random**). Edits are saved in that browser only, so use **Download questions file** to keep a copy and **Load questions file** to use it on another computer.
 - **↺ Reset board** makes every tile available again and keeps the scores.
+- **Pictures:** any question can show a picture. In the editor, paste a picture link into "Picture link (optional)". Country silhouettes are in `jeopardy/img/`, for example `img/italy.svg`. They're drawn from Natural Earth map data, which is public domain.
+- **Ready-made sets:** in the editor, choose a set and click **Load ready-made set**. The sets are "2026 in Review + Name That Country" (the default) and "General knowledge".
 
 Each game lives in its own folder. Add a card for each new game to `index.html`.
