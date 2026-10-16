@@ -51,7 +51,7 @@
   .board { flex: 1; display: grid; gap: 8px; min-height: 0; }
   .cat {
     background: var(--tile); border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    text-align: center; padding: 8px; font-weight: 800; text-transform: uppercase; font-size: clamp(14px, 2vw, 26px);
+    text-align: center; padding: 6px; font-weight: 800; text-transform: uppercase; font-size: clamp(13px, 1.7vw, 24px); line-height: 1.15;
     letter-spacing: 0.02em; border-bottom: 4px solid var(--accent);
   }
   .cell {
@@ -215,19 +215,19 @@
     title: 'Big Bang Jeopardy',
     dailyDouble: { c: 2, r: 3 },
     categories: [
-      { name: '2026 in Review', clues: [
+      { name: 'That\'s So 2026', clues: [
         { q: 'This country won the 2026 FIFA World Cup, beating Argentina 1-0 in the final.', a: 'Spain' },
         { q: 'In July 2026, Tadej Pogačar won this famous cycling race for a record-equalling fifth time.', a: 'The Tour de France' },
         { q: 'This country topped the 2026 Winter Olympics medal table with a record 18 gold medals.', a: 'Norway' },
         { q: 'On Artemis II in April 2026, Jeremy Hansen became the first person from this country to travel around the Moon.', a: 'Canada' },
         { q: 'Dara\'s song "Bangaranga" won Eurovision 2026, giving this country its first ever win.', a: 'Bulgaria' } ] },
-      { name: 'Screen & Sound 2026', clues: [
+      { name: 'Lights, Camera, 2026!', clues: [
         { q: 'This web-slinging superhero\'s film "Brand New Day" is the biggest box office hit of 2026.', a: 'Spider-Man' },
         { q: 'Woody and Buzz returned in summer 2026 in the fifth film of this Pixar series.', a: 'Toy Story' },
         { q: '"The Odyssey", one of 2026\'s biggest films, is based on an epic poem by this ancient Greek poet.', a: 'Homer' },
         { q: 'This Puerto Rican star won the 2026 Grammy for Album of the Year, the first ever for a Spanish-language album.', a: 'Bad Bunny' },
         { q: 'Jessie Buckley won the 2026 Oscar for Best Actress, the first winner in that category from this country.', a: 'Ireland' } ] },
-      { name: 'Name That Country', clues: [
+      { name: 'Shape Shifters', clues: [
         { q: 'Name this country.', a: 'Italy', img: 'img/italy.svg' },
         { q: 'Name this country.', a: 'Chile', img: 'img/chile.svg' },
         { q: 'Name this country.', a: 'Greece', img: 'img/greece.svg' },
@@ -239,13 +239,13 @@
         { q: 'A courtroom official\'s sugary sweet treat.', a: 'Judge fudge' },
         { q: 'A hilarious rabbit.', a: 'Funny bunny' },
         { q: 'A story about a giant sea mammal.', a: 'Whale tale' } ] },
-      { name: 'AI Assistants', clues: [
+      { name: 'Am I AI?', clues: [
         { q: 'OpenAI launched this chatbot in November 2022, starting the AI boom.', a: 'ChatGPT' },
         { q: 'Decades after Clippy the talking paperclip, Microsoft\'s AI helper is named after the person who sits next to the pilot.', a: 'Copilot' },
         { q: 'Google\'s AI shares its name with the star sign of the twins, and with the NASA space programme that came before Apollo.', a: 'Gemini' },
         { q: 'Anthropic\'s AI assistant shares its name with French painter Monet and composer Debussy.', a: 'Claude' },
         { q: '"Le Chat" is the AI assistant from this French company.', a: 'Mistral AI' } ] },
-      { name: 'Bookworms', clues: [
+      { name: 'Novel Ideas', clues: [
         { q: 'Sherlock Holmes\'s loyal friend and assistant.', a: 'Dr Watson' },
         { q: 'This author wrote "Pride and Prejudice".', a: 'Jane Austen' },
         { q: 'In George Orwell\'s "1984", the all-seeing leader is known by this name.', a: 'Big Brother' },
@@ -284,7 +284,7 @@
     ]
   };
   const SETS = [
-    { name: 'This week: 6 categories (2026, countries, Rhyme Time, AI, books...)', data: SAMPLE },
+    { name: 'This week: That\'s So 2026, Shape Shifters, Am I AI? and more', data: SAMPLE },
     { name: 'General knowledge', data: GENERAL }
   ];
 
