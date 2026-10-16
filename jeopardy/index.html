@@ -129,6 +129,7 @@
     <div class="tools">
       <button class="ghost" id="scoresBtn">🏆 Scores</button>
       <button class="ghost" id="editBtn">✏️ Edit questions</button>
+      <button class="ghost" id="finalBtn">🏁 Final Jeopardy</button>
       <button class="ghost" id="resetBoardBtn">↺ Reset board</button>
     </div>
   </div>
@@ -251,7 +252,12 @@
         { q: 'In George Orwell\'s "1984", the all-seeing leader is known by this name.', a: 'Big Brother' },
         { q: 'In Stephen King\'s "It", Pennywise the killer clown terrorises the children of this fictional town in Maine.', a: 'Derry' },
         { q: 'In "Moby-Dick", this is the name of Captain Ahab\'s ship.', a: 'The Pequod' } ] }
-    ]
+    ],
+    final: {
+      category: 'Game Show Glory',
+      q: 'This is the most money ever won by one contestant during a single Jeopardy! winning run (not counting tournaments). Closest guess wins!',
+      a: '$2,520,700, won by Ken Jennings over 74 games in a row in 2004'
+    }
   };
   const GENERAL = {
     title: 'Big Bang Jeopardy',
@@ -323,6 +329,7 @@
       cell.onclick = () => openClue(c, r);
       b.appendChild(cell);
     }));
+    $('finalBtn').classList.toggle('hidden', !(game.final && game.final.q));
     renderStrip();
   }
   function renderStrip() {
@@ -351,9 +358,24 @@
     $('clueView').classList.remove('hidden');
     renderStep();
   }
+  // Final Jeopardy (tie-breaker): splash → question → answer, no automatic scoring
+  function openFinal() {
+    const f = game.final;
+    current = { final: true, value: 0, step: 'dd' };
+    $('clueCat').textContent = 'Final Jeopardy · ' + (f.category || '');
+    $('clueVal').textContent = 'Closest guess wins';
+    $('clueQ').textContent = f.q;
+    $('clueA').textContent = f.a || '(No answer written yet)';
+    $('clueImg').removeAttribute('src');
+    document.querySelector('.clue-body').classList.remove('has-img');
+    $('clueView').classList.remove('hidden');
+    renderStep();
+  }
+  $('finalBtn').onclick = openFinal;
   function renderStep() {
     if (document.activeElement) document.activeElement.blur();   // so Space never double-fires a focused button
     const s = current.step;
+    $('ddSplash').textContent = current.final ? 'FINAL JEOPARDY!' : 'DAILY DOUBLE!';
     $('ddSplash').classList.toggle('hidden', s !== 'dd');
     $('clueQ').classList.toggle('hidden', s === 'dd');
     $('clueImg').classList.toggle('hidden', s === 'dd' || !$('clueImg').getAttribute('src'));
@@ -364,7 +386,7 @@
   }
   function renderAward() {
     const a = $('award'); a.innerHTML = '';
-    const show = current.step === 'answer' && players.length > 0;
+    const show = current.step === 'answer' && players.length > 0 && !current.final;
     a.classList.toggle('hidden', !show);
     if (!show) return;
     const label = document.createElement('span'); label.className = 'label'; label.textContent = `Who got it? +${current.value}:`;
@@ -471,6 +493,19 @@
       });
       grid.appendChild(box);
     });
+    // Final Jeopardy (optional tie-breaker)
+    if (!draft.final) draft.final = { category: '', q: '', a: '' };
+    const fin = document.createElement('div'); fin.className = 'ed-cat'; fin.style.gridColumn = '1 / -1';
+    const h = document.createElement('b'); h.textContent = '🏁 Final Jeopardy (tie-breaker, optional)';
+    h.style.display = 'block'; h.style.marginBottom = '8px'; h.style.color = 'var(--accent)';
+    const fc = document.createElement('input'); fc.value = draft.final.category; fc.placeholder = 'Final Jeopardy category';
+    fc.oninput = () => draft.final.category = fc.value;
+    const fq = document.createElement('textarea'); fq.value = draft.final.q; fq.placeholder = 'Question (leave blank to hide the Final Jeopardy button)';
+    fq.style.margin = '6px 0'; fq.oninput = () => draft.final.q = fq.value;
+    const fa = document.createElement('input'); fa.value = draft.final.a; fa.placeholder = 'Answer';
+    fa.oninput = () => draft.final.a = fa.value;
+    fin.append(h, fc, fq, fa);
+    grid.appendChild(fin);
   }
   $('edTitle').oninput = () => { draft.title = $('edTitle').value; };
   $('editBtn').onclick = openEditor;
