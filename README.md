@@ -8,6 +8,13 @@ Games for the Wazoku Friday Big Bang. They're hosted free on GitHub Pages, with 
 |---|---|---|
 | Boggle | https://destillero-wz.github.io/big-bang-games/boggle/?host | [boggle/README.md](boggle/README.md) |
 | Jeopardy | https://destillero-wz.github.io/big-bang-games/jeopardy/ | See below |
+| Wazoku Says (Family Feud) | https://destillero-wz.github.io/big-bang-games/feud/ | See below |
+
+## Wazoku Says (Family Feud)
+
+- **Setup:** add questions in **✏️ Edit questions**. Each has up to 8 answers, with points usually meaning how many people out of 100 said it. You can also load the ready-made Halloween, autumn & work life set. Add players in **🏆 Scores**.
+- **Playing:** read the question. When someone names an answer that's on the board, click it (or press **1–8**) to flip it, then click their name to give them its points. For a wrong guess, click **❌ Wrong answer** (or press **X**) to show the big X with a buzzer sound. Use **← →** to move between questions.
+- **↺ Reset game** hides all the answers again and keeps the scores.
 
 ## Jeopardy
 
