@@ -270,8 +270,8 @@
       // Points = number of people (out of 100 simulated respondents: 50 British, 50 Colombian) giving that answer
       { q: 'Name something people do in the shower.', answers: [
         ['Sing', 57], ['Wash their hair', 11], ['Have a wee', 11], ['Think', 8], ['Shave', 8], ['Pray', 3] ] },
-      { q: 'Name something you\'d hate to find in your sandwich.', answers: [
-        ['A hair', 61], ['A cockroach', 11], ['A worm / caterpillar', 8], ['A bug', 6], ['A slug', 6], ['A fly', 5] ] },
+      { q: 'Name something you never leave the house without.', answers: [
+        ['Phone', 43], ['Keys', 18], ['Wallet / purse', 17], ['A hat', 5], ['Coat / poncho', 4], ['Umbrella', 3], ['ID card', 3], ['Rosary', 3] ] },
       { q: 'Name a reason you might wake up in the middle of the night.', answers: [
         ['Need the toilet', 56], ['The kids / baby crying', 13], ['Bad dream', 6], ['Too hot', 6], ['Thirsty', 4], ['A noise', 4], ['Worrying / stress', 4] ] },
       { q: 'Name something people lie about on a first date.', answers: [
@@ -292,7 +292,7 @@
   ];
 
   // ---------- State ----------
-  let game = store.get('bbf-game') || clone(BLANK);
+  let game = store.get('bbf-game') || clone(CLASSIC);   // the surveyed set loads by default
   let state = store.get('bbf-state') || { round: 0, open: {}, strikes: {} };   // open: {round: [answer indexes]}
   let players = store.get('bbf-players') || [];
   const saveState = () => store.set('bbf-state', state);
