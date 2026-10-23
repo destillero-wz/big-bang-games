@@ -267,27 +267,28 @@
   const CLASSIC = {
     title: 'Wazoku Says',
     rounds: [
+      // Points = number of people (out of 100 simulated respondents: 50 British, 50 Colombian) giving that answer
       { q: 'Name something people do in the shower.', answers: [
-        ['Sing', 40], ['Wash their hair', 25], ['Think', 12], ['Shave', 10], ['Cry', 5], ['Brush their teeth', 4] ] },
+        ['Sing', 57], ['Wash their hair', 11], ['Have a wee', 11], ['Think', 8], ['Shave', 8], ['Pray', 3] ] },
       { q: 'Name something you\'d hate to find in your sandwich.', answers: [
-        ['A hair', 35], ['A bug', 25], ['Mould', 15], ['A fingernail', 10], ['A bone', 6], ['Plastic', 4] ] },
+        ['A hair', 61], ['A cockroach', 11], ['A worm / caterpillar', 8], ['A bug', 6], ['A slug', 6], ['A fly', 5] ] },
       { q: 'Name a reason you might wake up in the middle of the night.', answers: [
-        ['Need the toilet', 40], ['Bad dream', 20], ['A noise', 12], ['Too hot', 10], ['Kids or pets', 8], ['Hungry', 5] ] },
+        ['Need the toilet', 56], ['The kids / baby crying', 13], ['Bad dream', 6], ['Too hot', 6], ['Thirsty', 4], ['A noise', 4], ['Worrying / stress', 4] ] },
       { q: 'Name something people lie about on a first date.', answers: [
-        ['Age', 30], ['Job', 20], ['Height / weight', 15], ['Money', 12], ['Hobbies', 8], ['Their exes', 6] ] },
+        ['Their age', 35], ['Money / salary', 32], ['Their job', 12], ['Being single', 10], ['Their weight', 7], ['Their height', 3] ] },
       { q: 'Name something you pack for a holiday but never use.', answers: [
-        ['Extra clothes', 35], ['Books', 20], ['Swimwear', 12], ['Gym kit', 12], ['Umbrella', 8], ['Camera', 6] ] },
+        ['A jacket / jumper', 18], ['Too many clothes', 16], ['Swimwear', 13], ['Heels', 9], ['Books', 9], ['Smart clothes', 6], ['Umbrella', 5] ] },
       { q: 'Name something a dog does that a person shouldn\'t.', answers: [
-        ['Sniff strangers', 30], ['Lick faces', 20], ['Drink from the toilet', 15], ['Chase cars', 12], ['Wee on trees', 10], ['Roll in mud', 6] ] },
+        ['Lick itself', 37], ['Sniff bums', 24], ['Wee in the street', 19], ['Eat off the floor', 12], ['Drink from the toilet', 6] ] },
       { q: 'Name something people do when they think nobody\'s watching.', answers: [
-        ['Pick their nose', 40], ['Sing & dance', 25], ['Talk to themselves', 12], ['Eat junk food', 10], ['Check themselves in the mirror', 8] ] }
+        ['Pick their nose', 47], ['Dance', 20], ['Scratch their bum', 12], ['Sing', 6], ['Steal', 4], ['Talk to themselves', 4] ] }
     ]
   };
   const SETS = [
     { name: 'Blank game', data: BLANK },
     { name: 'Halloween, autumn & work life (9 questions)', data: HALLOWEEN },
     { name: 'Space & aliens (7 questions)', data: SPACE },
-    { name: 'Classic Family Feud style (7 questions)', data: CLASSIC }
+    { name: 'Classic Family Feud: 100 Brits & Colombians surveyed (7 questions)', data: CLASSIC }
   ];
 
   // ---------- State ----------
@@ -342,7 +343,7 @@
 
     const round = game.rounds[state.round];
     $('question').innerHTML = '';
-    const small = document.createElement('small'); small.textContent = `Question ${state.round + 1} of ${n} · We asked the team…`;
+    const small = document.createElement('small'); small.textContent = `Question ${state.round + 1} of ${n} · Survey says…`;
     $('question').append(small, round.q || '(No question written yet)');
 
     const box = $('answers'); box.innerHTML = '';
