@@ -73,6 +73,12 @@
   .slot .pts { color: var(--accent); min-width: 2.4em; text-align: right; }
   .slot.open { background: var(--slot-open); border-color: var(--accent); animation: flip 0.35s ease-out; }
   .slot.empty { visibility: hidden; }
+  .slot.picked { box-shadow: 0 0 0 3px var(--accent); }
+  .slot .who {
+    display: inline-block; margin-left: 10px; font-style: normal; font-size: 0.55em; font-weight: 700; text-transform: none;
+    background: var(--accent); color: #1b1d3a; border-radius: 999px; padding: 2px 10px; vertical-align: middle;
+  }
+  .award input { width: 150px; }
   @keyframes flip { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
 
   .award { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; min-height: 44px; }
@@ -166,7 +172,7 @@
 <div class="overlay hidden" id="scoresView">
   <div class="panel" style="max-width:640px">
     <div class="panel-head">
-      <div><h2>🏆 Scores</h2><p>Add everyone playing. When someone names an answer on the board, flip it and click their name to give them the points.</p></div>
+      <div><h2>🏆 Scores</h2><p>Players are added automatically when you give them points on the board, or you can add them here first. Type in a score to correct it.</p></div>
       <button class="ghost" id="scoresClose">Close</button>
     </div>
     <ol class="players" id="playerList"></ol>
@@ -239,9 +245,49 @@
         ['Watch the clock', 30], ['Plan the weekend', 25], ['Answer emails very slowly', 15], ['Snack', 12], ['Join the Big Bang', 10], ['Log off early', 5] ] }
     ]
   };
+  const SPACE = {
+    title: 'Wazoku Says',
+    rounds: [
+      { q: 'A new crew just arrived at the International Space Station for a 6-month stay. Name something you\'d miss most from home.', answers: [
+        ['Family & friends', 30], ['A proper meal', 25], ['A shower', 15], ['My bed', 10], ['Fresh air & nature', 8], ['My pet', 7] ] },
+      { q: 'Name something you\'d pack for a one-way trip to Mars.', answers: [
+        ['Photos of loved ones', 22], ['Snacks / chocolate', 20], ['A good book', 15], ['Phone & charger', 12], ['A comfort item / teddy', 10], ['Music', 8], ['Toilet roll', 5] ] },
+      { q: 'Name a famous alien from film or TV.', answers: [
+        ['E.T.', 35], ['Yoda', 15], ['Stitch', 12], ['Alf', 10], ['Predator', 9], ['Chewbacca', 8], ['Superman', 6] ] },
+      { q: 'Name a reason you\'d make a terrible astronaut.', answers: [
+        ['Scared of heights', 25], ['Motion sickness', 20], ['Claustrophobia', 15], ['Can\'t live without coffee', 12], ['Afraid of the dark', 10], ['I\'d press the wrong button', 8] ] },
+      { q: 'Name something you\'d say if you met an alien.', answers: [
+        ['"Hello!"', 35], ['"Take me to your leader"', 20], ['"Please don\'t eat me"', 12], ['"Can I get a selfie?"', 10], ['"Where are you from?"', 10], ['"Welcome to Earth"', 8] ] },
+      { q: 'Name a planet in our solar system.', answers: [
+        ['Mars', 30], ['Jupiter', 20], ['Saturn', 15], ['Venus', 12], ['Earth', 8], ['Mercury', 6], ['Neptune', 5], ['Uranus', 4] ] },
+      { q: 'If you could name a new planet, name a kind of thing you\'d name it after.', answers: [
+        ['Myself', 35], ['My partner / child', 20], ['My pet', 15], ['A food', 12], ['A celebrity', 8], ['A football team', 6] ] }
+    ]
+  };
+  const CLASSIC = {
+    title: 'Wazoku Says',
+    rounds: [
+      { q: 'Name something people do in the shower.', answers: [
+        ['Sing', 40], ['Wash their hair', 25], ['Think', 12], ['Shave', 10], ['Cry', 5], ['Brush their teeth', 4] ] },
+      { q: 'Name something you\'d hate to find in your sandwich.', answers: [
+        ['A hair', 35], ['A bug', 25], ['Mould', 15], ['A fingernail', 10], ['A bone', 6], ['Plastic', 4] ] },
+      { q: 'Name a reason you might wake up in the middle of the night.', answers: [
+        ['Need the toilet', 40], ['Bad dream', 20], ['A noise', 12], ['Too hot', 10], ['Kids or pets', 8], ['Hungry', 5] ] },
+      { q: 'Name something people lie about on a first date.', answers: [
+        ['Age', 30], ['Job', 20], ['Height / weight', 15], ['Money', 12], ['Hobbies', 8], ['Their exes', 6] ] },
+      { q: 'Name something you pack for a holiday but never use.', answers: [
+        ['Extra clothes', 35], ['Books', 20], ['Swimwear', 12], ['Gym kit', 12], ['Umbrella', 8], ['Camera', 6] ] },
+      { q: 'Name something a dog does that a person shouldn\'t.', answers: [
+        ['Sniff strangers', 30], ['Lick faces', 20], ['Drink from the toilet', 15], ['Chase cars', 12], ['Wee on trees', 10], ['Roll in mud', 6] ] },
+      { q: 'Name something people do when they think nobody\'s watching.', answers: [
+        ['Pick their nose', 40], ['Sing & dance', 25], ['Talk to themselves', 12], ['Eat junk food', 10], ['Check themselves in the mirror', 8] ] }
+    ]
+  };
   const SETS = [
     { name: 'Blank game', data: BLANK },
-    { name: 'Halloween, autumn & work life (9 questions)', data: HALLOWEEN }
+    { name: 'Halloween, autumn & work life (9 questions)', data: HALLOWEEN },
+    { name: 'Space & aliens (7 questions)', data: SPACE },
+    { name: 'Classic Family Feud style (7 questions)', data: CLASSIC }
   ];
 
   // ---------- State ----------
@@ -313,10 +359,13 @@
       if (isOpen) {
         slot.classList.add('open');
         const t = document.createElement('span'); t.className = 'txt'; t.textContent = a[0];
+        const who = awardedTo(state.round, i);
+        if (who) { const w = document.createElement('em'); w.className = 'who'; w.textContent = who; t.appendChild(w); }
         const p = document.createElement('span'); p.className = 'pts'; p.textContent = a[1];
         slot.append(t, p);
       }
-      slot.onclick = () => flip(i);
+      slot.classList.toggle('picked', !!pending && pending.round === state.round && pending.i === i);
+      slot.onclick = () => isOpen ? select(i) : flip(i);
       box.appendChild(slot);
     }
     const s = state.strikes[state.round] || 0;
@@ -332,24 +381,51 @@
       const b = document.createElement('b'); b.textContent = p.score; el.appendChild(b); s.appendChild(el);
     });
   }
+  // Who each revealed answer was given to: state.awards[round][answerIndex] = player name
+  const awardedTo = (r, i) => (state.awards && state.awards[r] && state.awards[r][i]) || null;
+  function award(name) {
+    const r = state.round, i = pending.i;
+    const pts = Number(game.rounds[r].answers[i][1]) || 0;
+    state.awards = state.awards || {};
+    state.awards[r] = state.awards[r] || {};
+    const prev = state.awards[r][i];
+    if (prev) { const old = players.find(p => p.name === prev); if (old) old.score -= pts; }   // moving the points
+    if (name) {
+      let p = players.find(x => x.name.toLowerCase() === name.toLowerCase());
+      if (!p) { p = { name, score: 0 }; players.push(p); }
+      p.score += pts;
+      state.awards[r][i] = p.name;
+    } else delete state.awards[r][i];
+    savePlayers(); saveState(); pending = null; render();
+  }
   function renderAward() {
     const a = $('award'); a.innerHTML = '';
     const show = pending !== null && pending.round === state.round;
     a.classList.toggle('hidden', !show);
     if (!show) return;
     const ans = game.rounds[state.round].answers[pending.i];
+    const current = awardedTo(state.round, pending.i);
     const label = document.createElement('span'); label.className = 'label';
-    label.textContent = players.length ? `Give ${ans[1]} pts for "${ans[0]}" to:` : 'Add players in 🏆 Scores to award points.';
+    label.textContent = current ? `"${ans[0]}" (${ans[1]} pts) is with ${current}. Move it to:` : `Give ${ans[1]} pts for "${ans[0]}" to:`;
     a.appendChild(label);
     players.forEach(p => {
+      if (p.name === current) return;
       const b = document.createElement('button'); b.textContent = p.name;
-      b.onclick = () => { p.score += Number(ans[1]) || 0; savePlayers(); pending = null; render(); };
+      b.onclick = () => award(p.name);
       a.appendChild(b);
     });
-    const skip = document.createElement('button'); skip.className = 'ghost'; skip.textContent = 'Nobody';
-    skip.onclick = () => { pending = null; render(); };
-    a.appendChild(skip);
+    const input = document.createElement('input'); input.placeholder = '+ New person'; input.maxLength = 30;
+    input.style.width = '150px'; input.setAttribute('aria-label', 'New person name');
+    const add = () => { const n = input.value.trim(); if (n) award(n); };
+    input.onkeydown = e => { if (e.key === 'Enter') add(); e.stopPropagation(); };
+    const addBtn = document.createElement('button'); addBtn.textContent = 'Add & give points';
+    addBtn.onclick = add;
+    const skip = document.createElement('button'); skip.className = 'ghost';
+    skip.textContent = current ? 'Take points back' : 'Nobody';
+    skip.onclick = () => current ? award(null) : (pending = null, render());
+    a.append(input, addBtn, skip);
   }
+  function select(i) { pending = { round: state.round, i }; render(); }
 
   // ---------- Actions ----------
   function flip(i) {
@@ -404,14 +480,12 @@
       const li = document.createElement('li');
       const rank = document.createElement('span'); rank.className = 'rank'; rank.textContent = i + 1;
       const name = document.createElement('span'); name.className = 'name'; name.textContent = p.name;
-      const pts = document.createElement('span'); pts.className = 'pts'; pts.textContent = p.score;
-      const minus = document.createElement('button'); minus.className = 'ghost'; minus.textContent = '−5';
-      minus.onclick = () => { p.score -= 5; savePlayers(); renderPlayers(); };
-      const plus = document.createElement('button'); plus.className = 'ghost'; plus.textContent = '+5';
-      plus.onclick = () => { p.score += 5; savePlayers(); renderPlayers(); };
+      const pts = document.createElement('input'); pts.type = 'number'; pts.value = p.score; pts.className = 'pts';
+      pts.style.width = '100px'; pts.title = 'Type to correct a score';
+      pts.onchange = () => { p.score = Number(pts.value) || 0; savePlayers(); renderPlayers(); };
       const del = document.createElement('button'); del.className = 'danger'; del.textContent = '✕'; del.title = 'Remove player';
       del.onclick = () => { if (confirm(`Remove ${p.name}?`)) { players = players.filter(x => x !== p); savePlayers(); renderPlayers(); } };
-      li.append(rank, name, pts, minus, plus, del);
+      li.append(rank, name, pts, del);
       list.appendChild(li);
     });
   }
