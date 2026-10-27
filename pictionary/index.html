@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Spooky Pictionary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1024;
+    --bg2: #1a1f45;
+    --panel: rgba(255,255,255,0.06);
+    --line: rgba(255,255,255,0.12);
+    --text: #f3f4ff;
+    --muted: #a3a8d6;
+    --accent: #ff7a1a;
+    --good: #22c55e;
+    --bad: #f43f5e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: Inter, system-ui, sans-serif; color: var(--text); overflow: hidden;
+    background: radial-gradient(ellipse at top, #2a1846, var(--bg) 70%) fixed, var(--bg);
+  }
+  .hidden { display: none !important; }
+  button {
+    font: inherit; font-weight: 600; font-size: 15px; border: 0; border-radius: 10px; padding: 9px 14px;
+    background: var(--accent); color: #1b1d3a; cursor: pointer; white-space: nowrap;
+  }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.ghost:hover { border-color: var(--accent); }
+  button.on { outline: 3px solid var(--accent); outline-offset: 1px; }
+  select { font: inherit; font-size: 14px; padding: 8px; border-radius: 10px; background: var(--bg2); color: var(--text); border: 1px solid var(--line); }
+
+  #app { display: flex; flex-direction: column; height: 100vh; padding: 10px; gap: 8px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .topbar h1 { margin: 0; font-size: clamp(20px, 2.6vw, 30px); font-weight: 800; letter-spacing: -0.02em; }
+  .topbar h1 span { color: var(--accent); }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .timer { font-size: clamp(26px, 3.4vw, 42px); font-weight: 800; font-variant-numeric: tabular-nums; min-width: 90px; text-align: center; }
+  .timer.low { color: var(--bad); }
+  .status { color: var(--muted); font-size: 14px; }
+
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); padding: 0; }
+  .swatch.on { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .size { width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line); }
+  .size i { display: block; border-radius: 50%; background: var(--text); }
+  .sep { width: 1px; height: 26px; background: var(--line); }
+
+  .stage { position: relative; flex: 1; min-height: 0; border-radius: 14px; overflow: hidden; background: #fffdf7; box-shadow: 0 6px 30px rgba(0,0,0,0.4); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+  .overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    background: rgba(13,16,36,0.88); text-align: center; padding: 20px;
+  }
+  .overlay h2 { margin: 0; font-size: clamp(28px, 5vw, 64px); font-weight: 800; }
+  .overlay .word { font-size: clamp(36px, 7vw, 96px); font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.02em; }
+  .overlay p { color: var(--muted); font-size: 18px; margin: 0; max-width: 640px; line-height: 1.5; }
+  .overlay ol { text-align: left; font-size: 17px; line-height: 1.7; color: var(--text); max-width: 640px; margin: 0; }
+  .peek {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #1b1d3a; color: var(--accent);
+    font-size: 28px; font-weight: 800; padding: 8px 18px; border-radius: 12px; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1>🎃 Spooky <span>Pictionary</span></h1>
+    <div class="group">
+      <span class="status" id="status">No word yet</span>
+      <div class="timer" id="timer">1:00</div>
+    </div>
+    <div class="group">
+      <button id="wordBtn">🎃 Get my secret word</button>
+      <button class="ghost" id="startBtn">▶ Start timer</button>
+      <select id="lenSel" aria-label="Round length">
+        <option value="45">45s</option>
+        <option value="60" selected>60s</option>
+        <option value="90">90s</option>
+      </select>
+      <button id="gotBtn" style="background:var(--good);color:#fff">✅ Got it!</button>
+      <button class="ghost" id="revealBtn">Reveal word</button>
+    </div>
+  </div>
+
+  <div class="toolbar" id="toolbar">
+    <div class="group" id="swatches"></div>
+    <div class="sep"></div>
+    <div class="group" id="sizes"></div>
+    <div class="sep"></div>
+    <button class="ghost" id="eraserBtn">🧽 Eraser</button>
+    <button class="ghost" id="undoBtn">↶ Undo</button>
+    <button class="ghost" id="clearBtn">🗑 Clear</button>
+    <div class="sep"></div>
+    <button class="ghost" id="helpBtn">❓ How to play</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="canvas"></canvas>
+    <div class="peek hidden" id="peek"></div>
+    <div class="overlay" id="help">
+      <h2>🎃 Spooky Pictionary</h2>
+      <ol>
+        <li>Click <b>🎃 Get my secret word</b>. It opens in a small pop-up window that only you can see.</li>
+        <li>In Teams, click <b>Share</b> and choose <b>this browser window</b>, not your whole screen, so the pop-up stays secret.</li>
+        <li>Click <b>▶ Start timer</b> and draw! No letters, numbers or words allowed.</li>
+        <li>When someone guesses it, click <b>✅ Got it!</b> If time runs out, the word is revealed.</li>
+        <li>Click <b>🗑 Clear</b> and hand over to the next artist.</li>
+      </ol>
+      <button id="helpClose">Let's draw!</button>
+    </div>
+    <div class="overlay hidden" id="result">
+      <h2 id="resultTitle"></h2>
+      <div class="word" id="resultWord"></div>
+      <p id="resultSub"></p>
+      <button id="resultClose">Back to the drawing</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+
+  // ---------- Drawing ----------
+  const COLORS = ['#111111', '#ff7a1a', '#7c3aed', '#16a34a', '#dc2626', '#2563eb', '#8b5a2b', '#9ca3af'];
+  const SIZES = [4, 9, 18, 34];
+  const canvas = $('canvas'), ctx = canvas.getContext('2d');
+  let color = COLORS[0], size = SIZES[1], erasing = false;
+  let strokes = [];      // { c, s, e, pts: [[x,y] normalised 0-1] }
+  let current = null;
+
+  function resize() {
+    const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    redraw();
+  }
+  function drawStroke(st) {
+    const r = canvas.getBoundingClientRect();
+    ctx.strokeStyle = st.e ? '#fffdf7' : st.c;
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.lineWidth = st.s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const p = st.pts.map(([x, y]) => [x * r.width, y * r.height]);
+    if (p.length === 1) { ctx.beginPath(); ctx.arc(p[0][0], p[0][1], st.s / 2, 0, Math.PI * 2); ctx.fill(); return; }
+    ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length - 1; i++) {
+      const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my);
+    }
+    ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
+    ctx.stroke();
+  }
+  function redraw() {
+    const r = canvas.getBoundingClientRect();
+    ctx.fillStyle = '#fffdf7'; ctx.fillRect(0, 0, r.width, r.height);
+    strokes.forEach(drawStroke);
+  }
+  const point = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+  canvas.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    try { canvas.setPointerCapture(e.pointerId); } catch {}   // keeps the stroke going if the pointer leaves the canvas
+    current = { c: color, s: erasing ? size * 2 : size, e: erasing, pts: [point(e)] };
+    strokes.push(current); redraw();
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!current) return;
+    let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    if (!evs.length) evs = [e];
+    evs.forEach(ev => current.pts.push(point(ev)));
+    redraw();
+  });
+  const end = () => { current = null; };
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+
+  // Toolbar
+  COLORS.forEach((c, i) => {
+    const b = document.createElement('button'); b.className = 'swatch' + (i === 0 ? ' on' : '');
+    b.style.background = c; b.title = c; b.setAttribute('aria-label', 'Colour ' + c);
+    b.onclick = () => { color = c; erasing = false; refreshTools(); };
+    $('swatches').appendChild(b);
+  });
+  SIZES.forEach((s, i) => {
+    const b = document.createElement('button'); b.className = 'size' + (i === 1 ? ' on' : '');
+    const dot = document.createElement('i'); const d = Math.min(26, Math.max(4, s * 0.75)); dot.style.width = dot.style.height = d + 'px';
+    b.appendChild(dot); b.title = 'Brush size ' + s; b.setAttribute('aria-label', 'Brush size ' + s);
+    b.onclick = () => { size = s; refreshTools(); };
+    $('sizes').appendChild(b);
+  });
+  function refreshTools() {
+    [...$('swatches').children].forEach((b, i) => b.classList.toggle('on', !erasing && COLORS[i] === color));
+    [...$('sizes').children].forEach((b, i) => b.classList.toggle('on', SIZES[i] === size));
+    $('eraserBtn').classList.toggle('on', erasing);
+  }
+  $('eraserBtn').onclick = () => { erasing = !erasing; refreshTools(); };
+  $('undoBtn').onclick = () => { strokes.pop(); redraw(); };
+  $('clearBtn').onclick = () => { strokes = []; redraw(); };
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); strokes.pop(); redraw(); }
+  });
+
+  // ---------- Words ----------
+  const WORDS = {
+    easy: ['Pumpkin', 'Ghost', 'Bat', 'Spider', 'Witch', 'Black cat', 'Skeleton', 'Candle', 'Full moon', 'Broomstick',
+           'Spider web', 'Bones', 'Owl', 'Sweets', 'Witch\'s hat', 'Eyeball', 'Gravestone', 'Mask'],
+    medium: ['Jack-o\'-lantern', 'Haunted house', 'Cauldron', 'Vampire', 'Mummy', 'Zombie', 'Werewolf', 'Scarecrow',
+             'Coffin', 'Potion', 'Crystal ball', 'Graveyard', 'Trick or treat', 'Toffee apple', 'Fangs', 'Monster',
+             'Frankenstein\'s monster', 'Grim Reaper', 'Wizard', 'Haunted castle'],
+    hard: ['Apple bobbing', 'Monster under the bed', 'Costume party', 'Ghost train', 'Pumpkin carving', 'Fortune teller',
+           'Bonfire night', 'Witch flying past the moon', 'Haunted mirror', 'Pumpkin spice latte', 'Dracula\'s castle',
+           'Sleepwalking', 'Zombie apocalypse', 'Séance', 'Creaky door', 'Spooky shadow']
+  };
+  let used = new Set(store.get('bbp-used') || []);
+  function pickWord(level) {
+    const pool = level === 'any' ? [...WORDS.easy, ...WORDS.medium, ...WORDS.hard] : WORDS[level];
+    let options = pool.filter(w => !used.has(w));
+    if (!options.length) { pool.forEach(w => used.delete(w)); options = pool.slice(); }
+    const w = options[Math.floor(Math.random() * options.length)];
+    used.add(w); store.set('bbp-used', [...used]);
+    return w;
+  }
+  // The secret word lives in localStorage so the pop-up and this window share it
+  const getWord = () => store.get('bbp-word');
+  function setWord(w) { store.set('bbp-word', w); renderStatus(); }
+  window.addEventListener('storage', e => { if (e.key === 'bbp-word') renderStatus(); });
+  function renderStatus() {
+    const w = getWord();
+    $('status').textContent = w ? '🤫 Secret word ready' : 'No word yet';
+  }
+
+  // Pop-up word card: a tiny page written into a new window
+  function openWordCard() {
+    const win = window.open('', 'spooky-word', 'width=420,height=360,left=40,top=40');
+    if (!win) { peekFallback(); return; }
+    win.document.open();
+    win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Your secret word (don't share!)</title>
+      <style>
+        body{margin:0;font-family:Inter,system-ui,sans-serif;background:#1b1530;color:#f3f4ff;display:flex;flex-direction:column;
+             align-items:center;justify-content:center;height:100vh;gap:14px;text-align:center;padding:16px;box-sizing:border-box}
+        .w{font-size:40px;font-weight:800;color:#ff7a1a;text-transform:uppercase;line-height:1.1}
+        .h{color:#a3a8d6;font-size:14px}
+        button,select{font:inherit;font-weight:600;border-radius:10px;padding:8px 12px;border:1px solid rgba(255,255,255,.2);background:#2a2350;color:#f3f4ff;cursor:pointer}
+        .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+      </style></head><body>
+      <div class="h">🤫 Your secret word. Keep this window off your screen share!</div>
+      <div class="w" id="w"></div>
+      <div class="row">
+        <select id="lvl"><option value="any">Any difficulty</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select>
+        <button id="n">🎲 New word</button>
+      </div>
+      <div class="h">Too hard? Click New word. You can close this window once you've memorised it.</div>
+      </body></html>`);
+    win.document.close();
+    const show = () => { win.document.getElementById('w').textContent = getWord(); };
+    win.document.getElementById('lvl').value = store.get('bbp-level') || 'any';
+    win.document.getElementById('lvl').onchange = e => store.set('bbp-level', e.target.value);
+    win.document.getElementById('n').onclick = () => { setWord(pickWord(store.get('bbp-level') || 'any')); show(); };
+    if (!getWord() || store.get('bbp-word-fresh') === false) setWord(pickWord(store.get('bbp-level') || 'any'));
+    store.set('bbp-word-fresh', true);
+    show(); win.focus();
+  }
+  // If pop-ups are blocked: hold the button to peek at the word in the corner
+  function peekFallback() {
+    if (!getWord() || store.get('bbp-word-fresh') === false) { setWord(pickWord('any')); store.set('bbp-word-fresh', true); }
+    alert('Your browser blocked the pop-up. Hold down the "👀 Hold to peek" button to see your word. Do this BEFORE you share your screen!');
+    $('wordBtn').textContent = '👀 Hold to peek';
+    $('wordBtn').onpointerdown = () => { $('peek').textContent = getWord(); $('peek').classList.remove('hidden'); };
+    $('wordBtn').onpointerup = $('wordBtn').onpointerleave = () => $('peek').classList.add('hidden');
+    $('wordBtn').onclick = null;
+  }
+  $('wordBtn').onclick = openWordCard;
+
+  // ---------- Timer & reveal ----------
+  let endAt = 0, tick = null;
+  const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  function showLength() { $('timer').textContent = fmt(+$('lenSel').value * 1000); $('timer').classList.remove('low'); }
+  $('lenSel').onchange = () => { if (!tick) showLength(); };
+  $('startBtn').onclick = () => {
+    if (!getWord()) { alert('Get your secret word first!'); return; }
+    clearInterval(tick);
+    endAt = Date.now() + +$('lenSel').value * 1000;
+    $('startBtn').textContent = '↺ Restart timer';
+    tick = setInterval(() => {
+      const left = endAt - Date.now();
+      $('timer').textContent = fmt(left);
+      $('timer').classList.toggle('low', left < 10000);
+      if (left <= 0) finish(false);
+    }, 200);
+  };
+  function finish(guessed) {
+    clearInterval(tick); tick = null;
+    $('startBtn').textContent = '▶ Start timer';
+    const w = getWord();
+    $('resultTitle').textContent = guessed ? '🎉 Got it!' : '⏰ Time\'s up!';
+    $('resultWord').textContent = w || '(no word)';
+    $('resultSub').textContent = guessed ? 'Nice drawing! Clear the canvas and pass it on.' : 'The word was…';
+    $('result').classList.remove('hidden');
+    store.set('bbp-word-fresh', false);   // next "Get my secret word" deals a new one
+  }
+  $('gotBtn').onclick = () => finish(true);
+  $('revealBtn').onclick = () => finish(false);
+  $('resultClose').onclick = () => { $('result').classList.add('hidden'); showLength(); };
+  $('helpBtn').onclick = () => $('help').classList.remove('hidden');
+  $('helpClose').onclick = () => $('help').classList.add('hidden');
+
+  window.addEventListener('resize', resize);
+  resize(); renderStatus(); showLength();
+})();
+</script>
+</body>
+</html>

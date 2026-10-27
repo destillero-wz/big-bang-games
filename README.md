@@ -9,6 +9,17 @@ Games for the Wazoku Friday Big Bang. They're hosted free on GitHub Pages, with 
 | Boggle | https://destillero-wz.github.io/big-bang-games/boggle/?host | [boggle/README.md](boggle/README.md) |
 | Jeopardy | https://destillero-wz.github.io/big-bang-games/jeopardy/ | See below |
 | Wazoku Says (Family Feud) | https://destillero-wz.github.io/big-bang-games/feud/ | See below |
+| Spooky Pictionary | https://destillero-wz.github.io/big-bang-games/pictionary/ | See below |
+
+## Spooky Pictionary
+
+Each artist opens the link on their own laptop:
+1. Click **🎃 Get my secret word**. The word opens in a small pop-up window. Use **🎲 New word** in the pop-up to choose easy, medium or hard.
+2. In Teams, share **this browser window**, not the whole screen, so the pop-up with the word stays private.
+3. Click **▶ Start timer** (45, 60 or 90 seconds) and draw. You can choose from 8 colours and 4 brush sizes, and use the eraser, undo (Ctrl+Z) and clear.
+4. When someone guesses it, click **✅ Got it!**. When the timer runs out, the word is revealed automatically. Then click **🗑 Clear** and hand over to the next artist.
+
+If the browser blocks the pop-up, the button changes to **👀 Hold to peek**. Hold it down to see the word, and do this before you start sharing.
 
 ## Wazoku Says (Family Feud)
 
