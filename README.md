@@ -10,6 +10,7 @@ Games for the Wazoku Friday Big Bang. They're hosted free on GitHub Pages, with 
 | Jeopardy | https://destillero-wz.github.io/big-bang-games/jeopardy/ | See below |
 | Wazoku Says (Family Feud) | https://destillero-wz.github.io/big-bang-games/feud/ | See below |
 | Spooky Pictionary | https://destillero-wz.github.io/big-bang-games/pictionary/ | See below |
+| Spooky Sketch-Off | https://destillero-wz.github.io/big-bang-games/sketch-off/ | See below |
 
 ## Spooky Pictionary
 
@@ -38,3 +39,7 @@ If the browser blocks the pop-up, the button changes to **👀 Hold to peek**. H
 - **Ready-made sets:** in the editor, choose a set and click **Load ready-made set**. The sets are "2026 in Review + Name That Country" (the default) and "General knowledge".
 
 Each game lives in its own folder. Add a card for each new game to `index.html`.
+
+## Spooky Sketch-Off
+
+Share this screen on Teams. Each prompt shows big on screen with its level and a countdown. Press **▶ Start drawing** (or **Space**) to start it, then use **+30s**, **Pause** and **← →** as you need. When time's up, a **Pens down** screen tells everyone to post a photo of their drawing in the chat and react ❤️ to their favourite. Warm-ups have no vote. After the last prompt there's a final "best of the session" vote. **✏️ Edit prompts** lets you change the prompts, levels and times.
