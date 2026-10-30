@@ -54,7 +54,24 @@
   .roundno { color: var(--muted); font-size: clamp(16px, 1.8vw, 22px); font-weight: 600; }
   .prompt { font-size: clamp(36px, 6.5vw, 96px); font-weight: 800; line-height: 1.1; max-width: 1200px; text-shadow: 0 4px 0 rgba(0,0,0,0.35); }
   .timer { font-size: clamp(64px, 12vw, 170px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
-  .timer.low { color: var(--bad); }
+  /* Last 10 seconds: glowing, throbbing timer and a pulsing blood-red vignette */
+  .timer.low { color: #ff3b1f; text-shadow: 0 0 24px rgba(255,59,31,0.9), 0 0 60px rgba(255,122,26,0.6); animation: throb 1s ease-in-out infinite; }
+  .timer.low::before { content: '🎃 '; }
+  .timer.low::after { content: ' 🎃'; }
+  @keyframes throb { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(1); } 45% { transform: scale(1.08); } }
+  #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.6s; box-shadow: inset 0 0 160px 40px rgba(180,0,20,0.75); }
+  body.spooky #vignette { opacity: 1; animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.55; } 15% { opacity: 1; } 45% { opacity: 0.85; } }
+  /* Pens down: bats fly across the screen */
+  .bat { position: fixed; z-index: 20; font-size: 48px; pointer-events: none; animation: fly linear forwards; }
+  @keyframes fly {
+    0% { transform: translate(var(--x0), var(--y0)) scale(0.6) rotate(-10deg); opacity: 0; }
+    10% { opacity: 1; }
+    50% { transform: translate(calc((var(--x0) + var(--x1)) / 2), calc(var(--y0) - 120px)) scale(1.1) rotate(10deg); }
+    90% { opacity: 1; }
+    100% { transform: translate(var(--x1), var(--y1)) scale(0.8) rotate(-10deg); opacity: 0; }
+  }
+  .cobweb { position: absolute; font-size: clamp(60px, 9vw, 130px); opacity: 0.5; }
   .bar { width: min(900px, 90%); height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
   .bar > div { height: 100%; background: var(--accent); width: 100%; transition: width 0.25s linear; }
   .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -112,15 +129,19 @@
     <li>Grab some <b>paper and a pen</b>. Any pens, pencils or highlighters will do!</li>
     <li>A Halloween prompt appears. Draw <b>your own take on it</b> before the timer runs out.</li>
     <li>When it's <b>pens down</b>, take a <b>photo</b> of your drawing and post it in the Teams chat.</li>
-    <li>React ❤️ to your favourite. <b>The most hearts wins the round!</b> (Warm-ups are just for fun.)</li>
+    <li>React 👻 to your favourite. <b>The most ghosts wins the round!</b> (Warm-ups are just for fun.)</li>
   </ol>
   <p>No artistic talent required. The more creative (or questionable) the better 👻</p>
   <button id="howClose" style="font-size:20px;padding:14px 28px">Let's draw!</button>
 </div>
 
+<div id="vignette"></div>
+
 <!-- Pens down -->
 <div class="overlay hidden" id="done">
-  <h2 class="pop">✏️ Pens down!</h2>
+  <span class="cobweb" style="top:0;left:0">🕸️</span>
+  <span class="cobweb" style="top:0;right:0;transform:scaleX(-1)">🕸️</span>
+  <h2 class="pop">👻 Pens down! 👻</h2>
   <div class="big" id="doneText">📸 Take a photo and post it in the chat</div>
   <p id="doneVote"></p>
   <div class="controls">
@@ -133,7 +154,7 @@
 <div class="overlay hidden" id="finish">
   <h2 class="pop">🏆 That's a wrap!</h2>
   <div class="big">Final vote: which drawing was the best of the whole session?</div>
-  <p>Scroll back through the chat and react 🏆 to your overall favourite.</p>
+  <p>Scroll back through the chat and react 👻 to your overall favourite.</p>
   <button class="ghost" id="finishBack">Back to the prompts</button>
 </div>
 
@@ -166,13 +187,13 @@
 
   // This week's prompts
   const DEFAULT = [
-    { text: 'A jack-o\'-lantern', level: 'warm', secs: 60 },
-    { text: 'A ghost', level: 'warm', secs: 60 },
+    { text: 'A jack-o\'-lantern', level: 'warm', secs: 90 },
+    { text: 'A ghost', level: 'warm', secs: 90 },
     { text: 'The scariest thing in your fridge', level: 'medium', secs: 90 },
     { text: 'A haunted house', level: 'medium', secs: 90 },
-    { text: 'What really lives under your bed', level: 'hard', secs: 120 },
-    { text: 'A monster on holiday', level: 'hard', secs: 120 },
-    { text: 'A Halloween-themed drink', level: 'hard', secs: 120 }
+    { text: 'What really lives under your bed', level: 'hard', secs: 90 },
+    { text: 'A monster on holiday', level: 'hard', secs: 90 },
+    { text: 'A Halloween-themed drink', level: 'hard', secs: 90 }
   ];
   let prompts = store.get('bbs-prompts') || clone(DEFAULT);
   let idx = 0, doneSet = new Set();
@@ -190,8 +211,30 @@
       o.connect(g); g.connect(actx.destination); o.start(actx.currentTime + when); o.stop(actx.currentTime + when + d);
     } catch {}
   }
-  const spookyEnd = () => { [523, 415, 330, 262].forEach((f, i) => tone(f, 0.5, i * 0.18, 'triangle', 0.22)); };
-  const tickSound = () => tone(880, 0.08, 0, 'square', 0.06);
+  // Heartbeat for the final seconds: two low thumps
+  const heartbeat = () => { tone(58, 0.18, 0, 'sine', 0.55); tone(52, 0.22, 0.2, 'sine', 0.45); };
+  // Pens down: an eerie ghost "wooOOooo" glide over a dark minor drone and a midnight bell
+  function spookyEnd() {
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = actx.currentTime;
+      // Ghostly wail: a sine that slides up then down, with wobbly vibrato
+      const wail = actx.createOscillator(), wg = actx.createGain(), lfo = actx.createOscillator(), lg = actx.createGain();
+      wail.type = 'sine';
+      wail.frequency.setValueAtTime(320, t);
+      wail.frequency.linearRampToValueAtTime(760, t + 0.8);
+      wail.frequency.linearRampToValueAtTime(280, t + 2.4);
+      lfo.frequency.value = 6; lg.gain.value = 18; lfo.connect(lg); lg.connect(wail.frequency);
+      wg.gain.setValueAtTime(0.001, t); wg.gain.linearRampToValueAtTime(0.16, t + 0.3); wg.gain.exponentialRampToValueAtTime(0.001, t + 2.6);
+      wail.connect(wg); wg.connect(actx.destination);
+      wail.start(t); lfo.start(t); wail.stop(t + 2.7); lfo.stop(t + 2.7);
+      // Dark D-minor drone underneath
+      [73.4, 87.3, 110].forEach(f => tone(f, 2.6, 0, 'triangle', 0.09));
+    } catch {}
+    // Midnight bell tolls
+    [0, 0.9, 1.8].forEach(w => { tone(196, 1.6, w, 'triangle', 0.18); tone(392, 1.0, w, 'sine', 0.06); });
+  }
   const renderSound = () => { $('soundBtn').textContent = muted ? '🔇 Sound off' : '🔊 Sound on'; };
   $('soundBtn').onclick = () => { muted = !muted; store.set('bbs-muted', muted); renderSound(); };
 
@@ -200,7 +243,9 @@
   const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   function renderTimer() {
     $('timer').textContent = fmt(left);
-    $('timer').classList.toggle('low', running && left <= 10000);
+    const spooky = running && left <= 10000;
+    $('timer').classList.toggle('low', spooky);
+    document.body.classList.toggle('spooky', spooky);
     $('bar').style.width = (total ? 100 * left / total : 100) + '%';
     $('startBtn').textContent = running ? '⏸ Pause' : (left < total && left > 0 ? '▶ Resume' : '▶ Start drawing');
   }
@@ -211,7 +256,7 @@
     iv = setInterval(() => {
       left = endAt - Date.now();
       const sec = Math.ceil(left / 1000);
-      if (sec !== lastSec && sec <= 5 && sec > 0) tickSound();
+      if (sec !== lastSec && sec <= 10 && sec > 0) heartbeat();
       lastSec = sec;
       if (left <= 0) { left = 0; stop(); timesUp(); }
       renderTimer();
@@ -223,14 +268,34 @@
   $('startBtn').onclick = toggle;
   $('addBtn').onclick = () => { left += 30000; total = Math.max(total, left); if (running) endAt += 30000; renderTimer(); };
 
+  // A flock of bats swooping across the screen
+  function releaseBats() {
+    const W = innerWidth, H = innerHeight;
+    for (let i = 0; i < 12; i++) {
+      const b = document.createElement('span'); b.className = 'bat'; b.textContent = '🦇';
+      const fromLeft = Math.random() < 0.5;
+      b.style.setProperty('--x0', (fromLeft ? -80 : W + 20) + 'px');
+      b.style.setProperty('--x1', (fromLeft ? W + 20 : -80) + 'px');
+      b.style.setProperty('--y0', (H * (0.2 + Math.random() * 0.7)) + 'px');
+      b.style.setProperty('--y1', (H * Math.random() * 0.6) + 'px');
+      b.style.left = '0'; b.style.top = '0';
+      b.style.fontSize = (32 + Math.random() * 40) + 'px';
+      b.style.animationDuration = (1.8 + Math.random() * 1.6) + 's';
+      b.style.animationDelay = (Math.random() * 0.8) + 's';
+      document.body.appendChild(b);
+      setTimeout(() => b.remove(), 4500);
+    }
+  }
+
   function timesUp() {
     spookyEnd();
+    releaseBats();
     doneSet.add(idx);
     const p = prompts[idx];
     $('doneText').textContent = '📸 Take a photo of your "' + p.text + '" and post it in the chat';
     $('doneVote').textContent = p.level === 'warm'
       ? 'Warm-up round: no vote, just enjoy everyone\'s masterpieces 😄'
-      : 'Now vote: react ❤️ to your favourite. The most hearts wins this round!';
+      : 'Now vote: react 👻 to your favourite. The most ghosts wins this round!';
     $('doneNext').textContent = idx === prompts.length - 1 ? 'Finish 🏆' : 'Next prompt →';
     $('done').classList.remove('hidden');
     render();

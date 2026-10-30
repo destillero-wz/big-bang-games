@@ -42,4 +42,4 @@ Each game lives in its own folder. Add a card for each new game to `index.html`.
 
 ## Spooky Sketch-Off
 
-Share this screen on Teams. Each prompt shows big on screen with its level and a countdown. Press **▶ Start drawing** (or **Space**) to start it, then use **+30s**, **Pause** and **← →** as you need. When time's up, a **Pens down** screen tells everyone to post a photo of their drawing in the chat and react ❤️ to their favourite. Warm-ups have no vote. After the last prompt there's a final "best of the session" vote. **✏️ Edit prompts** lets you change the prompts, levels and times.
+Share this screen on Teams. Each prompt shows big on screen with its level and a countdown. Press **▶ Start drawing** (or **Space**) to start it, then use **+30s**, **Pause** and **← →** as you need. When time's up, a **Pens down** screen tells everyone to post a photo of their drawing in the chat and react 👻 to their favourite. Warm-ups have no vote. After the last prompt there's a final "best of the session" vote. **✏️ Edit prompts** lets you change the prompts, levels and times.
