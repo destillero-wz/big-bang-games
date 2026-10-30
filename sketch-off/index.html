@@ -187,13 +187,13 @@
 
   // This week's prompts
   const DEFAULT = [
-    { text: 'A jack-o\'-lantern', level: 'warm', secs: 90 },
-    { text: 'A ghost', level: 'warm', secs: 90 },
-    { text: 'The scariest thing in your fridge', level: 'medium', secs: 90 },
-    { text: 'A haunted house', level: 'medium', secs: 90 },
-    { text: 'What really lives under your bed', level: 'hard', secs: 90 },
-    { text: 'A monster on holiday', level: 'hard', secs: 90 },
-    { text: 'A Halloween-themed drink', level: 'hard', secs: 90 }
+    { text: 'A jack-o\'-lantern', level: 'warm', secs: 60 },
+    { text: 'A ghost', level: 'warm', secs: 60 },
+    { text: 'The scariest thing in your fridge', level: 'medium', secs: 60 },
+    { text: 'A haunted house', level: 'medium', secs: 60 },
+    { text: 'What really lives under your bed', level: 'hard', secs: 60 },
+    { text: 'A monster on holiday', level: 'hard', secs: 60 },
+    { text: 'A Halloween-themed drink', level: 'hard', secs: 60 }
   ];
   let prompts = store.get('bbs-prompts') || clone(DEFAULT);
   let idx = 0, doneSet = new Set();
@@ -368,7 +368,7 @@
     });
   }
   $('editBtn').onclick = () => { stop(); draft = clone(prompts); renderEditor(); $('editView').classList.remove('hidden'); };
-  $('edAdd').onclick = () => { draft.push({ text: '', level: 'medium', secs: 90 }); renderEditor(); };
+  $('edAdd').onclick = () => { draft.push({ text: '', level: 'medium', secs: 60 }); renderEditor(); };
   $('edReset').onclick = () => { draft = clone(DEFAULT); renderEditor(); };
   $('edCancel').onclick = () => $('editView').classList.add('hidden');
   $('edSave').onclick = () => {
