@@ -115,6 +115,7 @@
       <button class="ghost" id="soundBtn">🔊 Sound on</button>
       <button class="ghost" id="howBtn">❓ How to play</button>
       <button class="ghost" id="editBtn">✏️ Edit puzzles</button>
+      <button class="ghost" id="boardBtn">🏆 Leaderboard</button>
       <button class="ghost" id="resetBtn">↺ Reset</button>
     </div>
   </div>
@@ -128,6 +129,7 @@
       <div class="actions">
         <button class="ghost" id="wrongBtn">❌ Wrong / next player</button>
         <button id="solveBtn" style="background:var(--good);color:#fff">🎉 Solved it!</button>
+        <button class="ghost" id="tossBtn" title="Letters appear one by one, first to shout the answer wins">⚡ Toss-up</button>
         <button class="ghost" id="revealBtn">Reveal puzzle</button>
         <button class="ghost" id="nextBtn">Next puzzle →</button>
       </div>
@@ -138,7 +140,7 @@
       <div class="result" id="result">Pick a player, then spin!</div>
       <button id="spinBtn">🎡 SPIN</button>
       <div class="players">
-        <div class="head"><span>Whose turn? (click a name)</span><span>points</span></div>
+        <div class="head"><span>Turn order: goes round automatically</span><span>total points</span></div>
         <div class="chips" id="chips"></div>
         <div class="addrow">
           <input id="newPlayer" placeholder="+ Add player" maxlength="24">
@@ -156,14 +158,24 @@
   <div class="panel">
     <h2>🎡 How to play Wheel of Wazoku</h2>
     <ol>
-      <li><b>Raise your hand</b> in Teams to take a turn. The host picks you and <b>spins the wheel</b>.</li>
+      <li>We go <b>round the call in order</b>. On your turn, the host <b>spins the wheel</b> for you.</li>
       <li>The wheel decides what each letter is worth. Call a <b>consonant</b>: <b>every time it appears</b> you win the wheel value (e.g. 3 × 500 = 1,500).</li>
       <li>Got one? You can <b>spin again</b>, <b>buy a vowel</b> (costs 250) or <b>solve the puzzle</b>.</li>
-      <li>Wrong letter, <b>Lose a Turn</b> or a wrong guess at the answer → the next raised hand goes.</li>
-      <li><b>💀 Bankrupt</b> wipes the points you've won on this puzzle!</li>
-      <li>Solve the puzzle for a <b>+1,000 bonus</b>. The most points at the end wins.</li>
+      <li>Wrong letter, <b>Lose a Turn</b> or a wrong guess at the answer → it's the <b>next person's</b> go.</li>
+      <li><b>💀 Bankrupt</b> wipes the points you've won <b>on this puzzle only</b>. Points from earlier puzzles are safe.</li>
+      <li>Solve the puzzle for a <b>+1,000 bonus</b>. The most points at the end wins. If there's a tie, a <b>⚡ toss-up</b> decides it!</li>
     </ol>
     <button id="howClose" style="font-size:18px;padding:12px 26px">Let's play!</button>
+  </div>
+</div>
+
+<!-- Leaderboard -->
+<div class="overlay hidden" id="leaderboard">
+  <div class="panel" style="max-width:560px;text-align:center">
+    <h2 style="font-size:36px">🏆 Leaderboard</h2>
+    <ol id="lbList" style="list-style:none;padding:0;font-size:26px;line-height:1.7;color:var(--text)"></ol>
+    <p id="lbNote" style="font-size:18px"></p>
+    <button id="lbClose">Back to the game</button>
   </div>
 </div>
 
@@ -192,14 +204,17 @@
   const VOWELS = 'AEIOU', VOWEL_COST = 250, SOLVE_BONUS = 1000, COLS = 14, ROWS = 4;
 
   const DEFAULT = [
-    { cat: 'Event', text: 'Bonfire Night' },
-    { cat: 'Phrase', text: 'Think outside the box' },
-    { cat: 'Food & Drink', text: 'Pumpkin spice latte' },
-    { cat: 'Movie Title', text: 'Back to the Future' },
-    { cat: 'Place', text: 'Buckingham Palace' },
-    { cat: 'Fun & Games', text: 'Hide and seek' },
-    { cat: 'Occupation', text: 'Innovation manager' },
-    { cat: 'Phrase', text: 'Every cloud has a silver lining' }
+    { cat: 'Phrase', text: 'The ball is in your court' },
+    { cat: 'Food & Drink', text: 'Fish and chips' },
+    { cat: 'Place', text: 'The Great Wall of China' },
+    { cat: 'Movie Title', text: 'The Lion King' },
+    { cat: 'Thing', text: 'Christmas jumper' },
+    { cat: 'TV Show', text: 'Strictly Come Dancing' },
+    { cat: 'Food & Drink', text: 'Colombian coffee' },
+    { cat: 'Event', text: 'Black Friday' },
+    { cat: 'Fun & Games', text: 'Snakes and ladders' },
+    { cat: 'Phrase', text: 'Out of this world' },
+    { cat: '⚡ Tiebreaker · Phrase', text: 'Save the best for last' }
   ];
   let puzzles = store.get('bbw-puzzles') || clone(DEFAULT);
   let st = store.get('bbw-state') || { p: 0, guessed: [], solved: [], revealedAll: false };
@@ -287,6 +302,14 @@
     }
   }
   function say(text, kind = '') { $('msg').textContent = text; $('msg').className = 'msg ' + kind; }
+  // Going round the call in order: hand the turn to the next player in the list
+  function passTurn(prefix) {
+    wheelValue = null;
+    if (!players.length) { active = null; say(prefix, 'bad'); return; }
+    const i = players.findIndex(x => x.name === active);
+    active = players[(i + 1) % players.length].name;
+    say(`${prefix} Next up: ${active}, spin the wheel! 🎡`, 'bad');
+  }
 
   function guess(L) {
     if (st.revealedAll || st.guessed.includes(L)) return;
@@ -305,9 +328,9 @@
       renderBoard(L); setTimeout(() => renderBoard(), 900 + n * 350);
       ding(n);
     } else {
-      say(`❌ No ${L}! Next player: raise your hand.`, 'bad'); buzz(); renderBoard();
+      buzz(); renderBoard(); passTurn(`❌ No ${L}!`);
     }
-    wheelValue = null; $('result').textContent = n ? 'Spin again?' : 'Next player';
+    wheelValue = null; $('result').textContent = n ? 'Spin again?' : `${active}'s turn`;
     $('result').className = 'result';
     if (!remaining().length) say('All letters found! Who can read it out? 🎉', 'good');
     save(); renderLetters(); renderPlayers(); renderRounds();
@@ -370,11 +393,14 @@
     const p = players.find(x => x.name === active);
     if (v === 'BANKRUPT') {
       buzz();
-      if (p) { p.score -= p.round; say(`💀 BANKRUPT! ${p.name} loses the ${p.round.toLocaleString()} points won on this puzzle. Next player!`, 'bad'); p.round = 0; }
+      let lost = 0;
+      if (p) { lost = Math.max(0, p.round); p.score -= p.round; p.round = 0; }
       $('result').textContent = '💀 BANKRUPT!'; $('result').className = 'result bad';
+      passTurn(p ? `💀 BANKRUPT! ${p.name} loses the ${lost.toLocaleString()} won on this puzzle (points from earlier puzzles are safe).` : '💀 BANKRUPT!');
     } else if (v === 'LOSE A TURN') {
-      buzz(); say(`😬 Lose a turn! Next player: raise your hand.`, 'bad');
+      buzz();
       $('result').textContent = 'LOSE A TURN'; $('result').className = 'result bad';
+      passTurn('😬 Lose a turn!');
     } else {
       wheelValue = v; tone(784, 0.25, 0, 'triangle', 0.2);
       $('result').textContent = `${v.toLocaleString()} per letter`; $('result').className = 'result';
@@ -387,12 +413,13 @@
   // ---------- Players ----------
   function renderPlayers() {
     const box = $('chips'); box.innerHTML = '';
-    if (!players.length) { const s = document.createElement('span'); s.style.color = 'var(--muted)'; s.style.fontSize = '14px'; s.textContent = 'Add players as they raise their hands.'; box.appendChild(s); }
-    players.slice().sort((a, b) => b.score - a.score).forEach(p => {
+    if (!players.length) { const s = document.createElement('span'); s.style.color = 'var(--muted)'; s.style.fontSize = '14px'; s.textContent = 'Add everyone in your Teams order (left to right).'; box.appendChild(s); }
+    players.forEach((p, i) => {
       const b = document.createElement('button'); b.className = 'chip' + (p.name === active ? ' active' : '');
-      b.textContent = p.name + ' ';
+      b.textContent = `${i + 1}. ${p.name} `;
       const s = document.createElement('b'); s.textContent = p.score.toLocaleString(); b.appendChild(s);
-      b.onclick = () => { active = p.name; wheelValue = null; $('result').textContent = 'Spin!'; $('result').className = 'result'; say(`${p.name}'s turn. Spin the wheel!`); save(); renderPlayers(); renderLetters(); };
+      if (p.round) { const r = document.createElement('small'); r.style.color = 'var(--muted)'; r.textContent = ` (${p.round > 0 ? '+' : ''}${p.round.toLocaleString()} this puzzle)`; b.appendChild(r); }
+      b.onclick = () => { if (tossIv) stopToss(); active = p.name; wheelValue = null; $('result').textContent = 'Spin!'; $('result').className = 'result'; say(`${p.name}'s turn. Spin the wheel!`); save(); renderPlayers(); renderLetters(); };
       b.oncontextmenu = e => {
         e.preventDefault();
         const v = prompt(`Correct ${p.name}'s score (or type DELETE to remove them):`, p.score);
@@ -409,21 +436,54 @@
     const n = $('newPlayer').value.trim(); if (!n) return;
     let p = players.find(x => x.name.toLowerCase() === n.toLowerCase());
     if (!p) { p = { name: n, score: 0, round: 0 }; players.push(p); }
-    active = p.name; wheelValue = null; $('newPlayer').value = '';
-    say(`${p.name}'s turn. Spin the wheel!`); save(); renderPlayers(); renderLetters();
+    $('newPlayer').value = '';
+    if (!active) { active = p.name; wheelValue = null; say(`${p.name} goes first. Spin the wheel!`); $('result').textContent = `${p.name}'s turn`; }
+    save(); renderPlayers(); renderLetters(); $('newPlayer').focus();
   };
   $('addPlayerBtn').onclick = addPlayer;
   $('newPlayer').onkeydown = e => { if (e.key === 'Enter') addPlayer(); e.stopPropagation(); };
 
   // ---------- Solve / reveal / navigation ----------
   $('wrongBtn').onclick = () => {
-    buzz(); wheelValue = null; active = null;
-    say('❌ Not quite! Next player: raise your hand.', 'bad');
-    $('result').textContent = 'Pick the next player'; $('result').className = 'result';
+    buzz(); passTurn('❌ Not quite!');
+    $('result').textContent = active ? `${active}'s turn` : 'Add players'; $('result').className = 'result';
     save(); renderPlayers(); renderLetters();
   };
+  // Toss-up: reveal a random letter every couple of seconds; first to shout the answer wins
+  let tossIv = null;
+  function stopToss() { clearInterval(tossIv); tossIv = null; $('tossBtn').textContent = '⚡ Toss-up'; }
+  $('tossBtn').onclick = () => {
+    if (tossIv) { stopToss(); return; }
+    if (st.revealedAll) return;
+    wheelValue = null; renderLetters();
+    say('⚡ Toss-up! Letters appear one by one. First to shout the right answer wins. Click their name, then 🎉 Solved it!');
+    $('tossBtn').textContent = '⏸ Stop toss-up';
+    tossIv = setInterval(() => {
+      const rem = remaining();
+      if (!rem.length) { stopToss(); return; }
+      const L = rem[Math.floor(Math.random() * rem.length)];
+      st.guessed.push(L); save(); renderBoard(L); renderLetters(); tone(1046, 0.2, 0, 'sine', 0.18);
+    }, 1800);
+  };
+  $('boardBtn').onclick = () => {
+    const ranked = players.slice().sort((a, b) => b.score - a.score);
+    const list = $('lbList'); list.innerHTML = '';
+    ranked.forEach((p, i) => {
+      const li = document.createElement('li');
+      li.textContent = `${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'} ${p.name}: ${p.score.toLocaleString()}`;
+      list.appendChild(li);
+    });
+    const top = ranked.length ? ranked[0].score : 0;
+    const tied = ranked.filter(p => p.score === top);
+    $('lbNote').textContent = !ranked.length ? 'No players yet.'
+      : tied.length > 1 ? `🤝 It's a tie between ${tied.map(p => p.name).join(' and ')}! Play the ⚡ Tiebreaker puzzle as a toss-up: the first of them to shout the answer wins.`
+      : `🏆 ${ranked[0].name} is in the lead!`;
+    $('leaderboard').classList.remove('hidden');
+  };
+  $('lbClose').onclick = () => $('leaderboard').classList.add('hidden');
   $('solveBtn').onclick = () => {
     if (st.revealedAll) return;
+    stopToss();
     const p = players.find(x => x.name === active);
     if (!p) { say('Click the name of whoever solved it first.', 'bad'); return; }
     p.score += SOLVE_BONUS;
@@ -438,15 +498,19 @@
   $('revealBtn').onclick = () => { if (!confirm('Reveal the answer? (No points awarded)')) return; st.revealedAll = true; players.forEach(x => x.round = 0); wheelValue = null; save(); renderBoard(); renderLetters(); say('The answer was…'); };
   function goTo(i) {
     st = { p: Math.max(0, Math.min(puzzles.length - 1, i)), guessed: [], solved: st.solved, revealedAll: false };
-    players.forEach(x => x.round = 0); wheelValue = null; active = null;
-    $('result').textContent = 'Pick a player, then spin!'; $('result').className = 'result';
-    say(''); save(); render();
+    stopToss();
+    players.forEach(x => x.round = 0); wheelValue = null;
+    if (players.length) { const k = players.findIndex(x => x.name === active); active = players[(k + 1) % players.length].name; }
+    $('result').textContent = active ? `${active}'s turn` : 'Add players, then spin!'; $('result').className = 'result';
+    say(active ? `${active} starts this puzzle. Spin the wheel!` : ''); save(); render();
   }
   $('nextBtn').onclick = () => goTo(st.p + 1);
   function renderRounds() {
     const box = $('rounds'); box.innerHTML = '';
     puzzles.forEach((pz, i) => {
-      const b = document.createElement('button'); b.textContent = 'Puzzle ' + (i + 1);
+      const b = document.createElement('button');
+      b.textContent = (pz.cat || '').includes('Tiebreaker') ? '⚡' : i + 1;
+      b.title = 'Puzzle ' + (i + 1) + ': ' + (pz.cat || '');
       b.className = (i === st.p ? 'on' : '') + (st.solved.includes(i) ? ' done' : '');
       b.onclick = () => { if (i !== st.p) goTo(i); };
       box.appendChild(b);

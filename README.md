@@ -47,11 +47,12 @@ Share this screen on Teams. Each prompt shows big on screen with its level and a
 
 ## Wheel of Wazoku
 
-- **A turn:** someone raises their hand, you add or click their name, then click **🎡 SPIN** (or press **Space**).
+- **Turn order:** add everyone at the start in your Teams order. Play goes round automatically after a miss, a wrong solve, **Bankrupt** or **Lose a Turn**, and each new puzzle starts with the next person. Click a name to change whose turn it is. Click **🎡 SPIN** (or press **Space**).
 - **The wheel sets the value:** they call a consonant (click it or press the key), and every time it appears on the board they win the wheel value.
 - **Vowels:** buying a vowel costs 250.
-- **Bankrupt and Lose a Turn:** **💀 Bankrupt** wipes what they've won on this puzzle, and **Lose a Turn** passes play to the next person.
+- **Bankrupt and Lose a Turn:** **💀 Bankrupt** wipes only what they've won on this puzzle; points from earlier puzzles are safe. **Lose a Turn** passes play to the next person.
 - **Wrong letter or wrong solve:** click **❌ Wrong / next player** after a wrong solve. A wrong letter passes to the next raised hand automatically.
 - **Solving:** click **🎉 Solved it!** to reveal the answer and give the solver a +1,000 bonus.
 - **Scores:** right-click a player's name to fix their score or remove them.
+- **Ties:** **🏆 Leaderboard** shows the ranking and flags a tie. Break it with the **⚡ Tiebreaker** puzzle and **⚡ Toss-up**, which reveals a random letter every couple of seconds. The first tied player to shout the answer wins: click their name, then **🎉 Solved it!**.
 - **Editing:** **✏️ Edit puzzles** changes the categories and answers (saved in that browser).
