@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wheel of Wazoku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1024;
+    --bg2: #1a1f45;
+    --panel: rgba(255,255,255,0.06);
+    --line: rgba(255,255,255,0.12);
+    --text: #f3f4ff;
+    --muted: #a3a8d6;
+    --accent: #ffb703;
+    --tile: #16a34a;
+    --good: #22c55e;
+    --bad: #f43f5e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: Inter, system-ui, sans-serif; color: var(--text);
+    background: radial-gradient(ellipse at top, var(--bg2), var(--bg) 70%) fixed, var(--bg);
+  }
+  .hidden { display: none !important; }
+  button {
+    font: inherit; font-weight: 600; font-size: 15px; border: 0; border-radius: 10px; padding: 9px 14px;
+    background: var(--accent); color: #1b1d3a; cursor: pointer; white-space: nowrap;
+  }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.ghost:hover { border-color: var(--accent); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  input, textarea { font: inherit; font-size: 15px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(0,0,0,0.25); color: var(--text); outline: none; }
+  input:focus, textarea:focus { border-color: var(--accent); }
+
+  #app { display: flex; flex-direction: column; min-height: 100vh; padding: 12px; gap: 8px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .topbar h1 { margin: 0; font-size: clamp(22px, 2.8vw, 34px); font-weight: 800; letter-spacing: -0.02em; }
+  .topbar h1 span { color: var(--accent); }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rounds { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rounds button { padding: 5px 11px; background: var(--panel); color: var(--text); border: 1px solid var(--line); font-size: 14px; }
+  .rounds button.on { background: var(--accent); color: #1b1d3a; border-color: var(--accent); }
+  .rounds button.done { opacity: 0.5; }
+
+  .main { flex: 1; display: grid; grid-template-columns: 1fr minmax(300px, 380px); gap: 16px; min-height: 0; }
+  @media (max-width: 1000px) { .main { grid-template-columns: 1fr; } }
+  .left { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .right { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
+  /* Puzzle board */
+  .boardwrap { background: #0b3d1f; border: 6px solid var(--accent); border-radius: 18px; padding: clamp(8px, 1.2vw, 16px); box-shadow: 0 8px 30px rgba(0,0,0,0.45); }
+  .board { display: grid; gap: 5px; }
+  .brow { display: grid; grid-template-columns: repeat(14, 1fr); gap: 5px; }
+  .cell { aspect-ratio: 5 / 6; border-radius: 6px; background: rgba(255,255,255,0.05); }
+  .cell.letter { background: var(--tile); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25); }
+  .cell.letter.shown { background: #fffdf5; color: #111; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(16px, 2.6vw, 40px); animation: flip 0.45s ease-out; }
+  .cell.letter.lit { background: #60a5fa; animation: none; }
+  .cell.punct { background: transparent; color: var(--text); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(16px, 2.6vw, 40px); }
+  @keyframes flip { from { transform: rotateY(90deg); } to { transform: rotateY(0); } }
+  .category { text-align: center; font-size: clamp(18px, 2.2vw, 28px); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: var(--accent); color: #1b1d3a; border-radius: 12px; padding: 8px; }
+
+  .msg { min-height: 28px; text-align: center; font-size: clamp(16px, 1.8vw, 22px); font-weight: 700; }
+  .msg.good { color: var(--good); } .msg.bad { color: var(--bad); }
+
+  /* Letters */
+  .letters { display: grid; grid-template-columns: repeat(13, 1fr); gap: 5px; }
+  .letters button { padding: 6px 0; font-size: 17px; font-weight: 800; background: var(--panel); color: var(--text); border: 1px solid var(--line); }
+  .letters button.vowel { background: rgba(96,165,250,0.18); }
+  .letters button.used { opacity: 0.2; }
+  .letters button:not(:disabled):hover { border-color: var(--accent); }
+
+  /* Wheel */
+  .wheelbox { position: relative; width: min(100%, 320px); aspect-ratio: 1; }
+  .wheelbox canvas { width: 100%; height: 100%; display: block; }
+  .pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 30px solid #fff; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)); z-index: 2; }
+  .result { font-size: clamp(22px, 2.6vw, 34px); font-weight: 800; min-height: 42px; text-align: center; }
+  .result.bad { color: var(--bad); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .actions button { font-size: 16px; }
+  #spinBtn { font-size: 20px; padding: 12px 28px; }
+
+  /* Players */
+  .players { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  .players .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; color: var(--muted); font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text); border: 2px solid transparent; font-size: 14px; }
+  .chip b { color: var(--accent); }
+  .chip.active { border-color: var(--accent); background: rgba(255,183,3,0.18); }
+  .addrow { display: flex; gap: 6px; margin-top: 8px; }
+  .addrow input { flex: 1; min-width: 0; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(5,7,20,0.9); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+  .panel { max-width: 860px; width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; padding: 22px; max-height: 92vh; overflow-y: auto; }
+  .panel h2 { margin: 0 0 8px; }
+  .panel p, .panel li { color: var(--muted); line-height: 1.6; }
+  .panel li b { color: var(--text); }
+  .ed-row { display: grid; grid-template-columns: 200px 1fr 36px; gap: 8px; margin-bottom: 8px; }
+  .ed-row button { padding: 6px; }
+  .ed-actions { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-top: 14px; }
+  .celebrate { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(5,7,20,0.75); z-index: 15; text-align: center; }
+  .celebrate h2 { font-size: clamp(36px, 6vw, 80px); margin: 0; }
+  .celebrate p { font-size: clamp(18px, 2.4vw, 30px); margin: 0; color: var(--accent); font-weight: 800; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1>🎡 Wheel of <span>Wazoku</span></h1>
+    <div class="rounds" id="rounds"></div>
+    <div class="tools">
+      <button class="ghost" id="soundBtn">🔊 Sound on</button>
+      <button class="ghost" id="howBtn">❓ How to play</button>
+      <button class="ghost" id="editBtn">✏️ Edit puzzles</button>
+      <button class="ghost" id="resetBtn">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="boardwrap"><div class="board" id="board"></div></div>
+      <div class="category" id="category"></div>
+      <div class="msg" id="msg"></div>
+      <div class="letters" id="letters"></div>
+      <div class="actions">
+        <button class="ghost" id="wrongBtn">❌ Wrong / next player</button>
+        <button id="solveBtn" style="background:var(--good);color:#fff">🎉 Solved it!</button>
+        <button class="ghost" id="revealBtn">Reveal puzzle</button>
+        <button class="ghost" id="nextBtn">Next puzzle →</button>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="wheelbox"><div class="pointer"></div><canvas id="wheel" width="720" height="720"></canvas></div>
+      <div class="result" id="result">Pick a player, then spin!</div>
+      <button id="spinBtn">🎡 SPIN</button>
+      <div class="players">
+        <div class="head"><span>Whose turn? (click a name)</span><span>points</span></div>
+        <div class="chips" id="chips"></div>
+        <div class="addrow">
+          <input id="newPlayer" placeholder="+ Add player" maxlength="24">
+          <button id="addPlayerBtn">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="celebrate hidden" id="celebrate"><h2>🎉 SOLVED! 🎉</h2><p id="celebrateText"></p><button id="celebrateClose">Continue</button></div>
+
+<!-- How to play -->
+<div class="overlay" id="how">
+  <div class="panel">
+    <h2>🎡 How to play Wheel of Wazoku</h2>
+    <ol>
+      <li><b>Raise your hand</b> in Teams to take a turn. The host picks you and <b>spins the wheel</b>.</li>
+      <li>The wheel decides what each letter is worth. Call a <b>consonant</b>: <b>every time it appears</b> you win the wheel value (e.g. 3 × 500 = 1,500).</li>
+      <li>Got one? You can <b>spin again</b>, <b>buy a vowel</b> (costs 250) or <b>solve the puzzle</b>.</li>
+      <li>Wrong letter, <b>Lose a Turn</b> or a wrong guess at the answer → the next raised hand goes.</li>
+      <li><b>💀 Bankrupt</b> wipes the points you've won on this puzzle!</li>
+      <li>Solve the puzzle for a <b>+1,000 bonus</b>. The most points at the end wins.</li>
+    </ol>
+    <button id="howClose" style="font-size:18px;padding:12px 26px">Let's play!</button>
+  </div>
+</div>
+
+<!-- Editor -->
+<div class="overlay hidden" id="editView">
+  <div class="panel">
+    <h2>✏️ Edit puzzles</h2>
+    <p>Letters, spaces and simple punctuation ( ' - & ! ? , . ) are fine. Keep each puzzle under about 50 characters so it fits the board. Saved in this browser.</p>
+    <div id="edRows"></div>
+    <button class="ghost" id="edAdd">+ Add puzzle</button>
+    <div class="ed-actions">
+      <button class="ghost" id="edDefault">Restore this week's puzzles</button>
+      <div style="display:flex;gap:8px"><button class="ghost" id="edCancel">Cancel</button><button id="edSave">Save</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const VOWELS = 'AEIOU', VOWEL_COST = 250, SOLVE_BONUS = 1000, COLS = 14, ROWS = 4;
+
+  const DEFAULT = [
+    { cat: 'Event', text: 'Bonfire Night' },
+    { cat: 'Phrase', text: 'Think outside the box' },
+    { cat: 'Food & Drink', text: 'Pumpkin spice latte' },
+    { cat: 'Movie Title', text: 'Back to the Future' },
+    { cat: 'Place', text: 'Buckingham Palace' },
+    { cat: 'Fun & Games', text: 'Hide and seek' },
+    { cat: 'Occupation', text: 'Innovation manager' },
+    { cat: 'Phrase', text: 'Every cloud has a silver lining' }
+  ];
+  let puzzles = store.get('bbw-puzzles') || clone(DEFAULT);
+  let st = store.get('bbw-state') || { p: 0, guessed: [], solved: [], revealedAll: false };
+  let players = store.get('bbw-players') || [];   // { name, score, round }
+  let active = store.get('bbw-active') || null;
+  let wheelValue = null;                         // number after a good spin
+  const save = () => { store.set('bbw-state', st); store.set('bbw-players', players); store.set('bbw-active', active); };
+
+  // ---------- Sounds ----------
+  let muted = store.get('bbw-muted') === true, actx = null;
+  function tone(f, d, when = 0, type = 'sine', vol = 0.2) {
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(vol, actx.currentTime + when);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + when + d);
+      o.connect(g); g.connect(actx.destination); o.start(actx.currentTime + when); o.stop(actx.currentTime + when + d);
+    } catch {}
+  }
+  const tick = () => tone(1400, 0.03, 0, 'square', 0.05);
+  const ding = n => { for (let i = 0; i < n; i++) tone(1046, 0.35, i * 0.35, 'sine', 0.22); };
+  const buzz = () => { tone(110, 0.6, 0, 'sawtooth', 0.16); tone(117, 0.6, 0, 'sawtooth', 0.16); };
+  const fanfare = () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.4, i * 0.13, 'triangle', 0.22));
+  const renderSound = () => { $('soundBtn').textContent = muted ? '🔇 Sound off' : '🔊 Sound on'; };
+  $('soundBtn').onclick = () => { muted = !muted; store.set('bbw-muted', muted); renderSound(); };
+
+  // ---------- Puzzle layout ----------
+  const clean = s => (s || '').toUpperCase().replace(/\s+/g, ' ').trim();
+  function layout(text) {
+    const words = clean(text).split(' ');
+    const lines = [];
+    let line = '';
+    words.forEach(w => {
+      if (!line) line = w;
+      else if ((line + ' ' + w).length <= COLS - 2) line += ' ' + w;
+      else { lines.push(line); line = w; }
+    });
+    if (line) lines.push(line);
+    // centre vertically in 4 rows and horizontally in 14 columns
+    const top = Math.max(0, Math.floor((ROWS - lines.length) / 2));
+    const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+    lines.slice(0, ROWS).forEach((l, i) => {
+      const start = Math.max(0, Math.floor((COLS - l.length) / 2));
+      [...l.slice(0, COLS)].forEach((ch, j) => { grid[top + i][start + j] = ch === ' ' ? null : ch; });
+    });
+    return grid;
+  }
+  const isLetter = ch => /[A-Z]/.test(ch);
+  const puzzleText = () => clean(puzzles[st.p].text);
+  const remaining = () => [...new Set([...puzzleText()].filter(isLetter))].filter(l => !st.guessed.includes(l));
+
+  function renderBoard(lit = '') {
+    const grid = layout(puzzles[st.p].text);
+    const b = $('board'); b.innerHTML = '';
+    grid.forEach(row => {
+      const r = document.createElement('div'); r.className = 'brow';
+      row.forEach(ch => {
+        const c = document.createElement('div'); c.className = 'cell';
+        if (ch && isLetter(ch)) {
+          c.classList.add('letter');
+          if (st.revealedAll || st.guessed.includes(ch)) { c.classList.add('shown'); c.textContent = ch; }
+          if (lit && ch === lit) c.classList.add('lit');
+        } else if (ch) { c.classList.add('punct'); c.textContent = ch; }
+        r.appendChild(c);
+      });
+      b.appendChild(r);
+    });
+    $('category').textContent = puzzles[st.p].cat || 'Puzzle';
+  }
+
+  // ---------- Letters ----------
+  function renderLetters() {
+    const box = $('letters'); box.innerHTML = '';
+    const solved = st.revealedAll;
+    for (const L of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+      const b = document.createElement('button');
+      const vowel = VOWELS.includes(L);
+      b.textContent = L; b.className = (vowel ? 'vowel' : '') + (st.guessed.includes(L) ? ' used' : '');
+      b.title = vowel ? `Buy a vowel (${VOWEL_COST} pts)` : 'Call this consonant';
+      b.disabled = solved || st.guessed.includes(L) || !active || (vowel ? false : wheelValue === null);
+      b.onclick = () => guess(L);
+      box.appendChild(b);
+    }
+  }
+  function say(text, kind = '') { $('msg').textContent = text; $('msg').className = 'msg ' + kind; }
+
+  function guess(L) {
+    if (st.revealedAll || st.guessed.includes(L)) return;
+    const p = players.find(x => x.name === active);
+    if (!p) { say('Pick whose turn it is first.', 'bad'); return; }
+    const vowel = VOWELS.includes(L);
+    if (vowel) {
+      if (p.score < VOWEL_COST) { say(`${p.name} needs ${VOWEL_COST} points to buy a vowel.`, 'bad'); return; }
+      p.score -= VOWEL_COST; p.round -= VOWEL_COST;
+    } else if (wheelValue === null) { say('Spin the wheel first!', 'bad'); return; }
+    st.guessed.push(L);
+    const n = [...puzzleText()].filter(c => c === L).length;
+    if (n) {
+      if (!vowel) { const won = n * wheelValue; p.score += won; p.round += won; say(`✅ ${n} × ${L}! +${won.toLocaleString()} to ${p.name}. Spin again, buy a vowel or solve.`, 'good'); }
+      else say(`✅ ${n} × ${L}. ${p.name} bought a vowel (−${VOWEL_COST}).`, 'good');
+      renderBoard(L); setTimeout(() => renderBoard(), 900 + n * 350);
+      ding(n);
+    } else {
+      say(`❌ No ${L}! Next player: raise your hand.`, 'bad'); buzz(); renderBoard();
+    }
+    wheelValue = null; $('result').textContent = n ? 'Spin again?' : 'Next player';
+    $('result').className = 'result';
+    if (!remaining().length) say('All letters found! Who can read it out? 🎉', 'good');
+    save(); renderLetters(); renderPlayers(); renderRounds();
+  }
+
+  // ---------- Wheel ----------
+  const WEDGES = [500, 300, 900, 250, 'BANKRUPT', 600, 400, 700, 300, 'LOSE A TURN', 800, 350,
+                  450, 500, 1000, 300, 'BANKRUPT', 550, 400, 650, 250, 750, 350, 600];
+  const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#111111', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#ffffff', '#14b8a6', '#f59e0b'];
+  const wctx = $('wheel').getContext('2d');
+  let angle = 0, spinning = false;
+  const SEG = Math.PI * 2 / WEDGES.length;
+  function drawWheel() {
+    const W = 720, c = W / 2, r = c - 12;
+    wctx.clearRect(0, 0, W, W);
+    WEDGES.forEach((v, i) => {
+      const a0 = angle + i * SEG - Math.PI / 2 - SEG / 2;
+      wctx.beginPath(); wctx.moveTo(c, c); wctx.arc(c, c, r, a0, a0 + SEG); wctx.closePath();
+      wctx.fillStyle = v === 'BANKRUPT' ? '#111111' : v === 'LOSE A TURN' ? '#ffffff' : COLORS[i % COLORS.length];
+      if (v !== 'BANKRUPT' && COLORS[i % COLORS.length] === '#111111') wctx.fillStyle = '#7c3aed';
+      if (v !== 'LOSE A TURN' && COLORS[i % COLORS.length] === '#ffffff') wctx.fillStyle = '#84cc16';
+      wctx.fill(); wctx.strokeStyle = 'rgba(0,0,0,0.35)'; wctx.lineWidth = 3; wctx.stroke();
+      wctx.save(); wctx.translate(c, c); wctx.rotate(a0 + SEG / 2); wctx.textAlign = 'right'; wctx.textBaseline = 'middle';
+      wctx.fillStyle = v === 'BANKRUPT' ? '#ffffff' : '#111111';
+      wctx.font = typeof v === 'number' ? '800 34px Inter, sans-serif' : '800 20px Inter, sans-serif';
+      wctx.fillText(typeof v === 'number' ? v : (v === 'BANKRUPT' ? '💀 BANKRUPT' : 'LOSE A TURN'), r - 16, 0);
+      wctx.restore();
+    });
+    wctx.beginPath(); wctx.arc(c, c, 46, 0, Math.PI * 2); wctx.fillStyle = '#ffb703'; wctx.fill();
+    wctx.lineWidth = 6; wctx.strokeStyle = '#1b1d3a'; wctx.stroke();
+    wctx.beginPath(); wctx.arc(c, c, r, 0, Math.PI * 2); wctx.lineWidth = 10; wctx.strokeStyle = '#ffb703'; wctx.stroke();
+  }
+  // Which wedge is under the pointer at the top
+  const wedgeAtPointer = () => {
+    const a = ((-angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    return Math.round(a / SEG) % WEDGES.length;
+  };
+  function spin() {
+    if (spinning || st.revealedAll) return;
+    if (!active) { say('Pick whose turn it is first (click a name, or add one).', 'bad'); return; }
+    spinning = true; wheelValue = null; renderLetters();
+    $('spinBtn').disabled = true; $('result').textContent = '🎡 Spinning…'; $('result').className = 'result';
+    const start = angle, extra = Math.PI * 2 * (4 + Math.random() * 2) + Math.random() * Math.PI * 2;
+    const dur = 4200, t0 = performance.now();
+    let lastIdx = wedgeAtPointer();
+    const ease = t => 1 - Math.pow(1 - t, 4);
+    // A timer (not requestAnimationFrame) so the wheel always lands, even if the window is in the background
+    const iv = setInterval(() => {
+      const t = Math.min(1, (performance.now() - t0) / dur);
+      angle = start + extra * ease(t);
+      drawWheel();
+      const idx = wedgeAtPointer();
+      if (idx !== lastIdx) { tick(); lastIdx = idx; }
+      if (t >= 1) { clearInterval(iv); landed(); }
+    }, 16);
+  }
+  function landed() {
+    spinning = false; $('spinBtn').disabled = false;
+    const v = WEDGES[wedgeAtPointer()];
+    const p = players.find(x => x.name === active);
+    if (v === 'BANKRUPT') {
+      buzz();
+      if (p) { p.score -= p.round; say(`💀 BANKRUPT! ${p.name} loses the ${p.round.toLocaleString()} points won on this puzzle. Next player!`, 'bad'); p.round = 0; }
+      $('result').textContent = '💀 BANKRUPT!'; $('result').className = 'result bad';
+    } else if (v === 'LOSE A TURN') {
+      buzz(); say(`😬 Lose a turn! Next player: raise your hand.`, 'bad');
+      $('result').textContent = 'LOSE A TURN'; $('result').className = 'result bad';
+    } else {
+      wheelValue = v; tone(784, 0.25, 0, 'triangle', 0.2);
+      $('result').textContent = `${v.toLocaleString()} per letter`; $('result').className = 'result';
+      say(`${active}, call a consonant! (or press a letter key)`);
+    }
+    save(); renderLetters(); renderPlayers();
+  }
+  $('spinBtn').onclick = spin;
+
+  // ---------- Players ----------
+  function renderPlayers() {
+    const box = $('chips'); box.innerHTML = '';
+    if (!players.length) { const s = document.createElement('span'); s.style.color = 'var(--muted)'; s.style.fontSize = '14px'; s.textContent = 'Add players as they raise their hands.'; box.appendChild(s); }
+    players.slice().sort((a, b) => b.score - a.score).forEach(p => {
+      const b = document.createElement('button'); b.className = 'chip' + (p.name === active ? ' active' : '');
+      b.textContent = p.name + ' ';
+      const s = document.createElement('b'); s.textContent = p.score.toLocaleString(); b.appendChild(s);
+      b.onclick = () => { active = p.name; wheelValue = null; $('result').textContent = 'Spin!'; $('result').className = 'result'; say(`${p.name}'s turn. Spin the wheel!`); save(); renderPlayers(); renderLetters(); };
+      b.oncontextmenu = e => {
+        e.preventDefault();
+        const v = prompt(`Correct ${p.name}'s score (or type DELETE to remove them):`, p.score);
+        if (v === null) return;
+        if (v.trim().toUpperCase() === 'DELETE') { players = players.filter(x => x !== p); if (active === p.name) active = null; }
+        else p.score = Number(v) || 0;
+        save(); renderPlayers();
+      };
+      b.title = 'Click: their turn · Right-click: fix score or remove';
+      box.appendChild(b);
+    });
+  }
+  const addPlayer = () => {
+    const n = $('newPlayer').value.trim(); if (!n) return;
+    let p = players.find(x => x.name.toLowerCase() === n.toLowerCase());
+    if (!p) { p = { name: n, score: 0, round: 0 }; players.push(p); }
+    active = p.name; wheelValue = null; $('newPlayer').value = '';
+    say(`${p.name}'s turn. Spin the wheel!`); save(); renderPlayers(); renderLetters();
+  };
+  $('addPlayerBtn').onclick = addPlayer;
+  $('newPlayer').onkeydown = e => { if (e.key === 'Enter') addPlayer(); e.stopPropagation(); };
+
+  // ---------- Solve / reveal / navigation ----------
+  $('wrongBtn').onclick = () => {
+    buzz(); wheelValue = null; active = null;
+    say('❌ Not quite! Next player: raise your hand.', 'bad');
+    $('result').textContent = 'Pick the next player'; $('result').className = 'result';
+    save(); renderPlayers(); renderLetters();
+  };
+  $('solveBtn').onclick = () => {
+    if (st.revealedAll) return;
+    const p = players.find(x => x.name === active);
+    if (!p) { say('Click the name of whoever solved it first.', 'bad'); return; }
+    p.score += SOLVE_BONUS;
+    st.revealedAll = true; st.solved.push(st.p);
+    players.forEach(x => x.round = 0);
+    wheelValue = null; save();
+    renderBoard(); renderLetters(); renderPlayers(); renderRounds(); fanfare();
+    $('celebrateText').textContent = `${p.name} +${SOLVE_BONUS.toLocaleString()} bonus · ${p.score.toLocaleString()} points`;
+    $('celebrate').classList.remove('hidden');
+  };
+  $('celebrateClose').onclick = () => $('celebrate').classList.add('hidden');
+  $('revealBtn').onclick = () => { if (!confirm('Reveal the answer? (No points awarded)')) return; st.revealedAll = true; players.forEach(x => x.round = 0); wheelValue = null; save(); renderBoard(); renderLetters(); say('The answer was…'); };
+  function goTo(i) {
+    st = { p: Math.max(0, Math.min(puzzles.length - 1, i)), guessed: [], solved: st.solved, revealedAll: false };
+    players.forEach(x => x.round = 0); wheelValue = null; active = null;
+    $('result').textContent = 'Pick a player, then spin!'; $('result').className = 'result';
+    say(''); save(); render();
+  }
+  $('nextBtn').onclick = () => goTo(st.p + 1);
+  function renderRounds() {
+    const box = $('rounds'); box.innerHTML = '';
+    puzzles.forEach((pz, i) => {
+      const b = document.createElement('button'); b.textContent = 'Puzzle ' + (i + 1);
+      b.className = (i === st.p ? 'on' : '') + (st.solved.includes(i) ? ' done' : '');
+      b.onclick = () => { if (i !== st.p) goTo(i); };
+      box.appendChild(b);
+    });
+    $('nextBtn').disabled = st.p >= puzzles.length - 1;
+  }
+  $('resetBtn').onclick = () => {
+    if (!confirm('Start a new game? This clears all scores and players.')) return;
+    players = []; active = null; st = { p: 0, guessed: [], solved: [], revealedAll: false };
+    wheelValue = null; save(); render(); say('');
+  };
+
+  document.addEventListener('keydown', e => {
+    if (!$('editView').classList.contains('hidden') || ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    if (!$('how').classList.contains('hidden')) { if (e.key === 'Escape' || e.key === 'Enter') $('how').classList.add('hidden'); return; }
+    if (/^[a-z]$/i.test(e.key) && !e.ctrlKey && !e.metaKey) guess(e.key.toUpperCase());
+    else if (e.key === ' ') { e.preventDefault(); spin(); }
+  });
+
+  // ---------- How to play / editor ----------
+  $('howBtn').onclick = () => $('how').classList.remove('hidden');
+  $('howClose').onclick = () => $('how').classList.add('hidden');
+  let draft = null;
+  function renderEditor() {
+    const box = $('edRows'); box.innerHTML = '';
+    draft.forEach((pz, i) => {
+      const row = document.createElement('div'); row.className = 'ed-row';
+      const c = document.createElement('input'); c.value = pz.cat; c.placeholder = 'Category'; c.oninput = () => pz.cat = c.value;
+      const t = document.createElement('input'); t.value = pz.text; t.placeholder = 'Puzzle answer'; t.maxLength = 52; t.oninput = () => pz.text = t.value;
+      const x = document.createElement('button'); x.className = 'ghost'; x.textContent = '✕'; x.onclick = () => { draft.splice(i, 1); renderEditor(); };
+      row.append(c, t, x); box.appendChild(row);
+    });
+  }
+  $('editBtn').onclick = () => { draft = clone(puzzles); renderEditor(); $('editView').classList.remove('hidden'); };
+  $('edAdd').onclick = () => { draft.push({ cat: 'Phrase', text: '' }); renderEditor(); };
+  $('edDefault').onclick = () => { draft = clone(DEFAULT); renderEditor(); };
+  $('edCancel').onclick = () => $('editView').classList.add('hidden');
+  $('edSave').onclick = () => {
+    const ok = draft.filter(p => /[A-Za-z]/.test(p.text || ''));
+    if (!ok.length) { alert('Add at least one puzzle.'); return; }
+    puzzles = ok; store.set('bbw-puzzles', puzzles);
+    st = { p: 0, guessed: [], solved: [], revealedAll: false };
+    $('editView').classList.add('hidden'); goTo(0);
+  };
+
+  function render() { renderBoard(); renderLetters(); renderPlayers(); renderRounds(); }
+  renderSound(); drawWheel(); render();
+})();
+</script>
+</body>
+</html>

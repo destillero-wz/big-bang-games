@@ -11,6 +11,7 @@ Games for the Wazoku Friday Big Bang. They're hosted free on GitHub Pages, with 
 | Wazoku Says (Family Feud) | https://destillero-wz.github.io/big-bang-games/feud/ | See below |
 | Spooky Pictionary | https://destillero-wz.github.io/big-bang-games/pictionary/ | See below |
 | Spooky Sketch-Off | https://destillero-wz.github.io/big-bang-games/sketch-off/ | See below |
+| Wheel of Wazoku | https://destillero-wz.github.io/big-bang-games/wheel/ | See below |
 
 ## Spooky Pictionary
 
@@ -43,3 +44,14 @@ Each game lives in its own folder. Add a card for each new game to `index.html`.
 ## Spooky Sketch-Off
 
 Share this screen on Teams. Each prompt shows big on screen with its level and a countdown. Press **▶ Start drawing** (or **Space**) to start it, then use **+30s**, **Pause** and **← →** as you need. When time's up, a **Pens down** screen tells everyone to post a photo of their drawing in the chat and react 👻 to their favourite. Warm-ups have no vote. After the last prompt there's a final "best of the session" vote. **✏️ Edit prompts** lets you change the prompts, levels and times.
+
+## Wheel of Wazoku
+
+- **A turn:** someone raises their hand, you add or click their name, then click **🎡 SPIN** (or press **Space**).
+- **The wheel sets the value:** they call a consonant (click it or press the key), and every time it appears on the board they win the wheel value.
+- **Vowels:** buying a vowel costs 250.
+- **Bankrupt and Lose a Turn:** **💀 Bankrupt** wipes what they've won on this puzzle, and **Lose a Turn** passes play to the next person.
+- **Wrong letter or wrong solve:** click **❌ Wrong / next player** after a wrong solve. A wrong letter passes to the next raised hand automatically.
+- **Solving:** click **🎉 Solved it!** to reveal the answer and give the solver a +1,000 bonus.
+- **Scores:** right-click a player's name to fix their score or remove them.
+- **Editing:** **✏️ Edit puzzles** changes the categories and answers (saved in that browser).
