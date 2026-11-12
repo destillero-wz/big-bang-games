@@ -65,4 +65,4 @@ Share this screen on Teams. Each prompt shows big on screen with its level and a
 3. **Posting:** after the countdown, everyone posts their answer in the Teams chat at the same time.
 4. **Reveal:** type the star's answer and click **⭐ Reveal answer**. It fills the blank on screen.
 5. **Scoring:** click everyone who matched (+1 each; close matches count). Pick the 😂 funniest answer (+1 bonus), then click **✅ Give points**.
-6. **Winner:** **🏆 Leaderboard** shows the winner and flags any tie. **✏️ Edit prompts** changes the prompts; use `____` for the blank.
+6. **Winner:** after the last prompt, **🏆 Leaderboard** shows the winner. If there's a tie, click **⚡ Play the tiebreaker**: someone who isn't tied becomes the star, and whoever matches wins. **✏️ Edit prompts** changes the prompts and the tiebreaker; use `____` for the blank.

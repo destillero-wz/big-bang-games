@@ -198,7 +198,8 @@
     <h2 style="font-size:36px">🏆 Leaderboard</h2>
     <ol id="lbList" style="list-style:none;padding:0;font-size:26px;line-height:1.7"></ol>
     <p id="lbNote"></p>
-    <button id="lbClose">Back to the game</button>
+    <button id="tbBtn" class="hidden" style="margin-right:8px">⚡ Play the tiebreaker</button>
+    <button id="lbClose" class="ghost">Back to the game</button>
   </div>
 </div>
 
@@ -207,6 +208,8 @@
     <h2>✏️ Edit prompts</h2>
     <p>Use <b>____</b> (four underscores) where the blank goes. Saved in this browser.</p>
     <div id="edRows"></div>
+    <p style="margin:14px 0 6px"><b>⚡ Tiebreaker</b> (only played if there's a tie at the end)</p>
+    <input id="edTb" style="width:100%">
     <button class="ghost" id="edAdd">+ Add prompt</button>
     <div class="ed-actions">
       <button class="ghost" id="edDefault">Restore this week's prompts</button>
@@ -233,15 +236,12 @@
     'The most overrated food in the world is ____.',
     'If I could have any celebrity as a colleague, it would be ____.',
     'The best fruit in the world is the ____.',
-    'The pizza topping I\'d ban forever is ____.',
-    'If I were an animal, I\'d be a ____.',
-    'The worst household chore is ____.',
-    'If I could only eat one meal for the rest of my life, it would be ____.',
-    'My go-to karaoke song is ____.',
-    'My dream holiday destination is ____.',
-    'My secret hidden talent is ____.'
+    'My go-to karaoke song is ____.'
   ];
+  // Only played if there's a tie at the end
+  const DEFAULT_TB = 'The worst household chore is ____.';
   let prompts = store.get('bbb-prompts') || clone(DEFAULT);
+  let tiebreak = store.get('bbb-tiebreak') || DEFAULT_TB;
   let players = store.get('bbb-players') || [];          // { name, score }
   let g = store.get('bbb-game') || { round: 0, star: 0, phase: 'prompt', answer: '' };
   const save = () => { store.set('bbb-players', players); store.set('bbb-game', g); };
@@ -267,7 +267,7 @@
 
   // ---------- Helpers ----------
   const star = () => players.length ? players[g.star % players.length] : null;
-  const promptText = () => prompts[g.round % prompts.length];
+  const promptText = () => g.tb ? tiebreak : prompts[g.round % prompts.length];
   function renderPrompt(answer) {
     const parts = promptText().split('____');
     const el = $('prompt'); el.innerHTML = '';
@@ -284,7 +284,7 @@
   // ---------- Main render ----------
   function render() {
     const s = star();
-    $('roundInfo').textContent = `Round ${g.round + 1} of ${prompts.length}`;
+    $('roundInfo').textContent = g.tb ? '⚡ Tiebreaker round' : `Round ${g.round + 1} of ${prompts.length}`;
     $('star').textContent = s ? `⭐ This round's star: ${s.name}` : '⭐ Add players to choose a star';
     renderPrompt(g.phase === 'scoring' || g.phase === 'done' ? g.answer : '');
     const name = s ? s.name : 'the star';
@@ -304,7 +304,7 @@
     show('cNext', g.phase === 'done');
     if (g.phase === 'scoring') renderPicks();
     if (g.phase === 'reveal') setTimeout(() => $('starAnswer').focus(), 50);
-    $('nextBtn').textContent = g.round >= prompts.length - 1 ? '🏆 See the winner' : 'Next round →';
+    $('nextBtn').textContent = (g.tb || g.round >= prompts.length - 1) ? '🏆 See the winner' : 'Next round →';
     renderBoard();
   }
   function renderBoard() {
@@ -402,7 +402,7 @@
   };
   function nextRound() {
     clearInterval(iv); cdToken++; $('countdown').classList.add('hidden');
-    if (g.round >= prompts.length - 1) { showLeaderboard(); return; }
+    if (g.tb || g.round >= prompts.length - 1) { showLeaderboard(); return; }
     g.round++; g.star = players.length ? (g.star + 1) % players.length : 0;
     g.phase = 'prompt'; g.answer = ''; g.matched = []; g.funny = null; save(); render();
   }
@@ -419,9 +419,19 @@
       $('lbList').appendChild(li);
     });
     const top = ranked.length ? ranked[0].score : 0, tied = ranked.filter(p => p.score === top);
+    const isTie = ranked.length && top > 0 && tied.length > 1;
     $('lbNote').textContent = !ranked.length ? 'No players yet.'
-      : tied.length > 1 ? `🤝 It's a tie between ${tied.map(p => p.name).join(' and ')}! Tiebreak: one more prompt with a different star. Whoever matches wins.`
-      : `🏆 ${ranked[0].name} wins!`;
+      : isTie ? `🤝 It's a tie between ${tied.map(p => p.name).join(' and ')}! Play the ⚡ tiebreaker: someone else is the star, and whoever matches wins.`
+      : `🏆 ${ranked[0].name} ${g.tb || g.round >= prompts.length - 1 ? 'wins!' : 'is in the lead!'}`;
+    $('tbBtn').classList.toggle('hidden', !isTie);
+    $('tbBtn').onclick = () => {
+      // The star should be someone who isn't in the tie, so the tied players are both guessing
+      const tiedNames = tied.map(p => p.name);
+      const pick = players.findIndex(p => !tiedNames.includes(p.name));
+      clearInterval(iv); cdToken++;
+      g = { round: g.round, star: pick >= 0 ? pick : (g.star + 1) % players.length, phase: 'prompt', answer: '', tb: true };
+      save(); $('lb').classList.add('hidden'); render();
+    };
     $('lb').classList.remove('hidden');
   }
   $('lbBtn').onclick = showLeaderboard;
@@ -444,14 +454,15 @@
       row.append(inp, x); box.appendChild(row);
     });
   }
-  $('editBtn').onclick = () => { draft = clone(prompts); renderEditor(); $('editView').classList.remove('hidden'); };
+  $('editBtn').onclick = () => { draft = clone(prompts); $('edTb').value = tiebreak; renderEditor(); $('editView').classList.remove('hidden'); };
   $('edAdd').onclick = () => { draft.push('My ____ is better than yours.'); renderEditor(); };
-  $('edDefault').onclick = () => { draft = clone(DEFAULT); renderEditor(); };
+  $('edDefault').onclick = () => { draft = clone(DEFAULT); $('edTb').value = DEFAULT_TB; renderEditor(); };
   $('edCancel').onclick = () => $('editView').classList.add('hidden');
   $('edSave').onclick = () => {
     const ok = draft.map(t => t.trim()).filter(Boolean).map(t => t.includes('____') ? t : t + ' ____');
     if (!ok.length) { alert('Add at least one prompt.'); return; }
     prompts = ok; store.set('bbb-prompts', prompts);
+    const tb = $('edTb').value.trim(); tiebreak = tb ? (tb.includes('____') ? tb : tb + ' ____') : DEFAULT_TB; store.set('bbb-tiebreak', tiebreak);
     g = { round: 0, star: g.star, phase: 'prompt', answer: '' }; save();
     $('editView').classList.add('hidden'); render();
   };
