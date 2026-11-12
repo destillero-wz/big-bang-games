@@ -12,6 +12,7 @@ Games for the Wazoku Friday Big Bang. They're hosted free on GitHub Pages, with 
 | Spooky Pictionary | https://destillero-wz.github.io/big-bang-games/pictionary/ | See below |
 | Spooky Sketch-Off | https://destillero-wz.github.io/big-bang-games/sketch-off/ | See below |
 | Wheel of Wazoku | https://destillero-wz.github.io/big-bang-games/wheel/ | See below |
+| Blankety Blank | https://destillero-wz.github.io/big-bang-games/blankety/ | See below |
 
 ## Spooky Pictionary
 
@@ -56,3 +57,12 @@ Share this screen on Teams. Each prompt shows big on screen with its level and a
 - **Scores:** right-click a player's name to fix their score or remove them.
 - **Ties:** **🏆 Leaderboard** shows the ranking and flags a tie. Break it with the **⚡ Tiebreaker** puzzle and **⚡ Toss-up**, which reveals a random letter every couple of seconds. The first tied player to shout the answer wins: click their name, then **🎉 Solved it!**.
 - **Editing:** **✏️ Edit puzzles** changes the categories and answers (saved in that browser).
+
+## Blankety Blank
+
+1. **Set up:** add the players in your Teams order. The ⭐ star rotates each round, and you can click ⭐ next to a name to change it.
+2. **Writing:** read the prompt. Everyone writes what they think the star will say, and the star writes their real answer. Click **✏️ Start writing** (20–60s) or go straight to **3, 2, 1… Post!**.
+3. **Posting:** after the countdown, everyone posts their answer in the Teams chat at the same time.
+4. **Reveal:** type the star's answer and click **⭐ Reveal answer**. It fills the blank on screen.
+5. **Scoring:** click everyone who matched (+1 each; close matches count). Pick the 😂 funniest answer (+1 bonus), then click **✅ Give points**.
+6. **Winner:** **🏆 Leaderboard** shows the winner and flags any tie. **✏️ Edit prompts** changes the prompts; use `____` for the blank.

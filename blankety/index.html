@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blankety Blank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1024;
+    --bg2: #1a1f45;
+    --panel: rgba(255,255,255,0.06);
+    --line: rgba(255,255,255,0.12);
+    --text: #f3f4ff;
+    --muted: #a3a8d6;
+    --accent: #ffb703;
+    --pink: #f472b6;
+    --good: #22c55e;
+    --bad: #f43f5e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: Inter, system-ui, sans-serif; color: var(--text);
+    background: radial-gradient(ellipse at top, #3a1b4d, var(--bg) 70%) fixed, var(--bg);
+  }
+  .hidden { display: none !important; }
+  button {
+    font: inherit; font-weight: 600; font-size: 16px; border: 0; border-radius: 10px; padding: 10px 16px;
+    background: var(--accent); color: #1b1d3a; cursor: pointer; white-space: nowrap;
+  }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.ghost:hover { border-color: var(--accent); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  input, select { font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.25); color: var(--text); outline: none; }
+  select { background: var(--bg2); }
+  input:focus { border-color: var(--accent); }
+
+  #app { display: flex; flex-direction: column; min-height: 100vh; padding: 14px; gap: 10px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .topbar h1 { margin: 0; font-size: clamp(22px, 2.8vw, 34px); font-weight: 800; letter-spacing: -0.02em; }
+  .topbar h1 span { color: var(--pink); }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .main { flex: 1; display: grid; grid-template-columns: 1fr minmax(260px, 320px); gap: 16px; min-height: 0; }
+  @media (max-width: 960px) { .main { grid-template-columns: 1fr; } }
+
+  /* Stage */
+  .stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 10px; }
+  .roundinfo { color: var(--muted); font-weight: 600; font-size: clamp(14px, 1.6vw, 18px); }
+  .star { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(90deg, #f472b6, #ffb703); color: #1b1d3a; font-weight: 800; border-radius: 999px; padding: 10px 22px; font-size: clamp(18px, 2.4vw, 30px); box-shadow: 0 6px 24px rgba(244,114,182,0.35); }
+  .prompt { font-size: clamp(28px, 4.6vw, 64px); font-weight: 800; line-height: 1.2; max-width: 1100px; text-shadow: 0 4px 0 rgba(0,0,0,0.35); }
+  .blank { display: inline-block; min-width: 4.5em; border-bottom: 0.12em solid var(--accent); color: var(--accent); padding: 0 0.15em; }
+  .blank.filled { border-bottom-color: var(--pink); color: var(--pink); animation: pop 0.6s ease-out; }
+  @keyframes pop { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+  .instructions { font-size: clamp(16px, 1.9vw, 22px); color: var(--muted); max-width: 900px; line-height: 1.5; }
+  .instructions b { color: var(--text); }
+  .timer { font-size: clamp(56px, 9vw, 120px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  .timer.low { color: var(--bad); }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .controls button { font-size: 18px; padding: 12px 20px; }
+  .revealrow { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .revealrow input { width: min(420px, 80vw); font-size: 20px; }
+
+  /* Scoring */
+  .scoring { width: min(900px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .scoring h3 { margin: 0; font-size: 18px; }
+  .scoring .hint { color: var(--muted); font-size: 14px; }
+  .pick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .pick button { background: rgba(255,255,255,0.08); color: var(--text); border: 2px solid transparent; }
+  .pick button.on { border-color: var(--good); background: rgba(34,197,94,0.22); }
+  .pick.funny button.on { border-color: var(--pink); background: rgba(244,114,182,0.22); }
+
+  /* Sidebar */
+  .side { display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+  .card h3 { margin: 0 0 8px; font-size: 16px; display: flex; justify-content: space-between; color: var(--muted); }
+  .board { list-style: none; margin: 0; padding: 0; }
+  .board li { display: flex; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--line); font-size: 17px; }
+  .board li:last-child { border-bottom: 0; }
+  .board .n { flex: 1; font-weight: 600; }
+  .board .s { font-weight: 800; color: var(--accent); min-width: 34px; text-align: right; }
+  .board li.isstar .n::after { content: ' ⭐'; }
+  .board button { padding: 3px 8px; font-size: 13px; }
+  .addrow { display: flex; gap: 6px; margin-top: 8px; }
+  .addrow input { flex: 1; min-width: 0; font-size: 15px; padding: 8px 10px; }
+  .addrow button { padding: 8px 12px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(5,7,20,0.92); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 14px; text-align: center; }
+  .count { font-size: clamp(120px, 26vw, 360px); font-weight: 800; color: var(--accent); animation: pop 0.5s ease-out; line-height: 1; }
+  .count.post { font-size: clamp(64px, 12vw, 170px); color: var(--pink); }
+  .panel { max-width: 860px; width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; padding: 22px; text-align: left; max-height: 90vh; overflow-y: auto; }
+  .panel h2 { margin: 0 0 8px; }
+  .panel li, .panel p { color: var(--muted); line-height: 1.7; font-size: 17px; }
+  .panel li b { color: var(--text); }
+  .ed-row { display: grid; grid-template-columns: 1fr 36px; gap: 8px; margin-bottom: 8px; }
+  .ed-row button { padding: 6px; }
+  .ed-actions { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-top: 14px; }
+  .summary { font-size: clamp(16px, 1.9vw, 22px); color: var(--good); font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <h1>⬜ Blankety <span>Blank</span></h1>
+    <div class="tools">
+      <button class="ghost" id="soundBtn">🔊 Sound on</button>
+      <button class="ghost" id="howBtn">❓ How to play</button>
+      <button class="ghost" id="lbBtn">🏆 Leaderboard</button>
+      <button class="ghost" id="editBtn">✏️ Edit prompts</button>
+      <button class="ghost" id="resetBtn">↺ New game</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="stage">
+      <div class="roundinfo" id="roundInfo"></div>
+      <div class="star" id="star"></div>
+      <div class="prompt" id="prompt"></div>
+      <div class="instructions" id="instr"></div>
+      <div class="timer hidden" id="timer"></div>
+
+      <!-- phase: prompt / writing -->
+      <div class="controls" id="cWrite">
+        <select id="lenSel" aria-label="Writing time">
+          <option value="20">20s to write</option>
+          <option value="30" selected>30s to write</option>
+          <option value="45">45s to write</option>
+          <option value="60">60s to write</option>
+        </select>
+        <button id="writeBtn">✏️ Start writing</button>
+        <button class="ghost" id="postNowBtn">3, 2, 1… Post!</button>
+      </div>
+
+      <!-- phase: reveal -->
+      <div class="revealrow hidden" id="cReveal">
+        <input id="starAnswer" placeholder="Type the star's answer…" maxlength="60">
+        <button id="revealBtn">⭐ Reveal answer</button>
+      </div>
+
+      <!-- phase: scoring -->
+      <div class="scoring hidden" id="cScore">
+        <div>
+          <h3>✅ Who matched? <span class="hint">(+1 each, close matches count)</span></h3>
+        </div>
+        <div class="pick" id="matchPick"></div>
+        <div>
+          <h3>😂 Funniest answer? <span class="hint">(+1 bonus, pick from the 😂 reactions)</span></h3>
+        </div>
+        <div class="pick funny" id="funnyPick"></div>
+        <div class="controls"><button id="awardBtn">✅ Give points</button></div>
+      </div>
+
+      <!-- phase: done -->
+      <div class="controls hidden" id="cNext">
+        <div class="summary" id="summary"></div>
+        <button id="nextBtn">Next round →</button>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <h3><span>Players &amp; scores</span><span>pts</span></h3>
+        <ul class="board" id="board"></ul>
+        <div class="addrow">
+          <input id="newPlayer" placeholder="+ Add player" maxlength="24">
+          <button id="addBtn">Add</button>
+        </div>
+      </div>
+      <div class="card" style="font-size:13px;color:var(--muted);line-height:1.5">
+        ⭐ = this round's star. The star rotates each round in the order players were added. Click <b>⭐</b> next to a name to make them the star instead.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="countdown"><div class="count" id="countNum">3</div></div>
+
+<div class="overlay" id="how">
+  <div class="panel">
+    <h2>⬜ How to play Blankety Blank</h2>
+    <ol>
+      <li>Each round, one person is the <b>⭐ star</b>.</li>
+      <li>A fill-in-the-blank prompt appears. <b>Everyone writes down what they think the star will say</b>. The star writes their <b>real</b> answer. Keep it to yourself!</li>
+      <li>On <b>"3, 2, 1… POST!"</b> everyone posts their answer in the Teams chat at the same time.</li>
+      <li>The star's answer is revealed. <b>Matched the star? +1 point</b> (close matches count).</li>
+      <li>React 😂 to the funniest answer in the chat. <b>Funniest answer gets +1 bonus</b>.</li>
+      <li>Next round, someone new is the star. Most points at the end wins!</li>
+    </ol>
+    <button id="howClose" style="font-size:18px;padding:12px 26px">Let's play!</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="lb">
+  <div class="panel" style="max-width:560px;text-align:center">
+    <h2 style="font-size:36px">🏆 Leaderboard</h2>
+    <ol id="lbList" style="list-style:none;padding:0;font-size:26px;line-height:1.7"></ol>
+    <p id="lbNote"></p>
+    <button id="lbClose">Back to the game</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="editView">
+  <div class="panel">
+    <h2>✏️ Edit prompts</h2>
+    <p>Use <b>____</b> (four underscores) where the blank goes. Saved in this browser.</p>
+    <div id="edRows"></div>
+    <button class="ghost" id="edAdd">+ Add prompt</button>
+    <div class="ed-actions">
+      <button class="ghost" id="edDefault">Restore this week's prompts</button>
+      <div style="display:flex;gap:8px"><button class="ghost" id="edCancel">Cancel</button><button id="edSave">Save</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  const DEFAULT = [
+    'If animals could talk, the rudest one would be the ____.',
+    'I\'d never survive in the jungle because I\'m scared of ____.',
+    'If I won the lottery, the first thing I\'d buy is a ____.',
+    'My superhero name would be Captain ____.',
+    'The one thing I always forget to pack on holiday is my ____.',
+    'The most overrated food in the world is ____.',
+    'If I could have any celebrity as a colleague, it would be ____.'
+  ];
+  let prompts = store.get('bbb-prompts') || clone(DEFAULT);
+  let players = store.get('bbb-players') || [];          // { name, score }
+  let g = store.get('bbb-game') || { round: 0, star: 0, phase: 'prompt', answer: '' };
+  const save = () => { store.set('bbb-players', players); store.set('bbb-game', g); };
+
+  // ---------- Sounds ----------
+  let muted = store.get('bbb-muted') === true, actx = null;
+  function tone(f, d, when = 0, type = 'sine', vol = 0.2) {
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), gn = actx.createGain();
+      o.type = type; o.frequency.value = f;
+      gn.gain.setValueAtTime(vol, actx.currentTime + when);
+      gn.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + when + d);
+      o.connect(gn); gn.connect(actx.destination); o.start(actx.currentTime + when); o.stop(actx.currentTime + when + d);
+    } catch {}
+  }
+  const beep = () => tone(660, 0.18, 0, 'square', 0.12);
+  const go = () => { tone(880, 0.12, 0, 'square', 0.14); tone(1320, 0.35, 0.12, 'square', 0.14); };
+  const reveal = () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.35, i * 0.1, 'triangle', 0.2));
+  const renderSound = () => { $('soundBtn').textContent = muted ? '🔇 Sound off' : '🔊 Sound on'; };
+  $('soundBtn').onclick = () => { muted = !muted; store.set('bbb-muted', muted); renderSound(); };
+
+  // ---------- Helpers ----------
+  const star = () => players.length ? players[g.star % players.length] : null;
+  const promptText = () => prompts[g.round % prompts.length];
+  function renderPrompt(answer) {
+    const parts = promptText().split('____');
+    const el = $('prompt'); el.innerHTML = '';
+    parts.forEach((p, i) => {
+      el.append(p);
+      if (i < parts.length - 1) {
+        const b = document.createElement('span'); b.className = 'blank' + (answer ? ' filled' : '');
+        b.textContent = answer ? answer.toUpperCase() : ' '; el.appendChild(b);
+      }
+    });
+  }
+  function show(id, on) { $(id).classList.toggle('hidden', !on); }
+
+  // ---------- Main render ----------
+  function render() {
+    const s = star();
+    $('roundInfo').textContent = `Round ${g.round + 1} of ${prompts.length}`;
+    $('star').textContent = s ? `⭐ This round's star: ${s.name}` : '⭐ Add players to choose a star';
+    renderPrompt(g.phase === 'scoring' || g.phase === 'done' ? g.answer : '');
+    const name = s ? s.name : 'the star';
+    const instr = {
+      prompt: `<b>Everyone:</b> write down what you think <b>${name}</b> will say. <b>${name}:</b> write your real answer. Don't post yet!`,
+      writing: `Writing… keep your answer secret until the countdown!`,
+      reveal: `Answers are in! <b>${name}</b>, what did you write? Type it below and reveal.`,
+      scoring: `Did you match <b>${name}</b>? Now react 😂 to the funniest answer in the chat.`,
+      done: ''
+    }[g.phase];
+    $('instr').innerHTML = instr;
+    show('cWrite', g.phase === 'prompt' || g.phase === 'writing');
+    $('writeBtn').disabled = g.phase === 'writing';
+    show('timer', g.phase === 'writing');
+    show('cReveal', g.phase === 'reveal');
+    show('cScore', g.phase === 'scoring');
+    show('cNext', g.phase === 'done');
+    if (g.phase === 'scoring') renderPicks();
+    if (g.phase === 'reveal') setTimeout(() => $('starAnswer').focus(), 50);
+    $('nextBtn').textContent = g.round >= prompts.length - 1 ? '🏆 See the winner' : 'Next round →';
+    renderBoard();
+  }
+  function renderBoard() {
+    const ul = $('board'); ul.innerHTML = '';
+    if (!players.length) { const li = document.createElement('li'); li.style.color = 'var(--muted)'; li.textContent = 'Add everyone playing (in your Teams order).'; ul.appendChild(li); }
+    players.forEach((p, i) => {
+      const li = document.createElement('li'); if (star() === p) li.classList.add('isstar');
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = p.name;
+      const s = document.createElement('span'); s.className = 's'; s.textContent = p.score;
+      const mk = document.createElement('button'); mk.className = 'ghost'; mk.textContent = '⭐'; mk.title = 'Make ' + p.name + ' the star';
+      mk.onclick = () => { if (g.phase === 'scoring' || g.phase === 'done') return; g.star = i; save(); render(); };
+      const x = document.createElement('button'); x.className = 'ghost'; x.textContent = '✕'; x.title = 'Remove';
+      x.onclick = () => {
+        if (!confirm(`Remove ${p.name}?`)) return;
+        const wasStar = star() === p; players.splice(i, 1);
+        if (g.star >= players.length) g.star = 0; save(); render();
+      };
+      li.append(n, s, mk, x); ul.appendChild(li);
+    });
+  }
+
+  // ---------- Players ----------
+  const addPlayer = () => {
+    const n = $('newPlayer').value.trim(); if (!n) return;
+    if (players.some(p => p.name.toLowerCase() === n.toLowerCase())) { $('newPlayer').value = ''; return; }
+    players.push({ name: n, score: 0 }); $('newPlayer').value = ''; $('newPlayer').focus(); save(); render();
+  };
+  $('addBtn').onclick = addPlayer;
+  $('newPlayer').onkeydown = e => { if (e.key === 'Enter') addPlayer(); };
+
+  // ---------- Writing timer & countdown ----------
+  let iv = null;
+  $('writeBtn').onclick = () => {
+    if (!players.length) { alert('Add the players first.'); return; }
+    g.phase = 'writing'; save(); render();
+    const end = Date.now() + +$('lenSel').value * 1000;
+    clearInterval(iv);
+    iv = setInterval(() => {
+      const left = Math.max(0, end - Date.now()), s = Math.ceil(left / 1000);
+      $('timer').textContent = s; $('timer').classList.toggle('low', s <= 5);
+      if (left <= 0) { clearInterval(iv); countdown(); }
+    }, 100);
+  };
+  $('postNowBtn').onclick = () => { if (!players.length) { alert('Add the players first.'); return; } clearInterval(iv); countdown(); };
+  function countdown() {
+    const ov = $('countdown'), num = $('countNum');
+    ov.classList.remove('hidden');
+    const steps = ['3', '2', '1', '📮 POST!'];
+    let i = 0;
+    const step = () => {
+      num.textContent = steps[i]; num.className = 'count' + (i === 3 ? ' post' : '');
+      void num.offsetWidth; num.style.animation = 'none'; void num.offsetWidth; num.style.animation = '';
+      i === 3 ? go() : beep();
+      i++;
+      if (i < steps.length) setTimeout(step, 900);
+      else setTimeout(() => { ov.classList.add('hidden'); g.phase = 'reveal'; save(); render(); }, 1600);
+    };
+    step();
+  }
+
+  // ---------- Reveal & scoring ----------
+  const doReveal = () => {
+    const a = $('starAnswer').value.trim(); if (!a) { $('starAnswer').focus(); return; }
+    g.answer = a; g.phase = 'scoring'; g.matched = []; g.funny = null; $('starAnswer').value = '';
+    save(); render(); reveal();
+  };
+  $('revealBtn').onclick = doReveal;
+  $('starAnswer').onkeydown = e => { if (e.key === 'Enter') doReveal(); };
+  function renderPicks() {
+    const s = star();
+    const mBox = $('matchPick'), fBox = $('funnyPick'); mBox.innerHTML = ''; fBox.innerHTML = '';
+    players.forEach(p => {
+      if (p === s) return;
+      const m = document.createElement('button'); m.textContent = p.name;
+      m.classList.toggle('on', (g.matched || []).includes(p.name));
+      m.onclick = () => { const set = new Set(g.matched || []); set.has(p.name) ? set.delete(p.name) : set.add(p.name); g.matched = [...set]; save(); renderPicks(); };
+      mBox.appendChild(m);
+      const f = document.createElement('button'); f.textContent = '😂 ' + p.name;
+      f.classList.toggle('on', g.funny === p.name);
+      f.onclick = () => { g.funny = g.funny === p.name ? null : p.name; save(); renderPicks(); };
+      fBox.appendChild(f);
+    });
+  }
+  $('awardBtn').onclick = () => {
+    const parts = [];
+    (g.matched || []).forEach(n => { const p = players.find(x => x.name === n); if (p) p.score += 1; });
+    if (g.matched && g.matched.length) parts.push(`✅ ${g.matched.join(', ')} matched (+1)`);
+    else parts.push('Nobody matched this time!');
+    if (g.funny) { const p = players.find(x => x.name === g.funny); if (p) p.score += 1; parts.push(`😂 ${g.funny} funniest (+1)`); }
+    $('summary').textContent = parts.join(' · ');
+    g.phase = 'done'; save(); render(); tone(784, 0.3, 0, 'triangle', 0.2);
+  };
+  $('nextBtn').onclick = () => {
+    if (g.round >= prompts.length - 1) { showLeaderboard(); return; }
+    g.round++; g.star = players.length ? (g.star + 1) % players.length : 0;
+    g.phase = 'prompt'; g.answer = ''; g.matched = []; g.funny = null; save(); render();
+  };
+
+  // ---------- Leaderboard ----------
+  function showLeaderboard() {
+    const ranked = players.slice().sort((a, b) => b.score - a.score);
+    $('lbList').innerHTML = '';
+    ranked.forEach((p, i) => {
+      const li = document.createElement('li'); li.textContent = `${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'} ${p.name}: ${p.score}`;
+      $('lbList').appendChild(li);
+    });
+    const top = ranked.length ? ranked[0].score : 0, tied = ranked.filter(p => p.score === top);
+    $('lbNote').textContent = !ranked.length ? 'No players yet.'
+      : tied.length > 1 ? `🤝 It's a tie between ${tied.map(p => p.name).join(' and ')}! Tiebreak: one more prompt with a different star. Whoever matches wins.`
+      : `🏆 ${ranked[0].name} wins!`;
+    $('lb').classList.remove('hidden');
+  }
+  $('lbBtn').onclick = showLeaderboard;
+  $('lbClose').onclick = () => $('lb').classList.add('hidden');
+  $('resetBtn').onclick = () => {
+    if (!confirm('Start a new game? Scores go back to 0 (players are kept).')) return;
+    players.forEach(p => p.score = 0); g = { round: 0, star: 0, phase: 'prompt', answer: '' }; save(); render();
+  };
+
+  // ---------- How to play / editor ----------
+  $('howBtn').onclick = () => $('how').classList.remove('hidden');
+  $('howClose').onclick = () => $('how').classList.add('hidden');
+  let draft = null;
+  function renderEditor() {
+    const box = $('edRows'); box.innerHTML = '';
+    draft.forEach((t, i) => {
+      const row = document.createElement('div'); row.className = 'ed-row';
+      const inp = document.createElement('input'); inp.value = t; inp.oninput = () => draft[i] = inp.value;
+      const x = document.createElement('button'); x.className = 'ghost'; x.textContent = '✕'; x.onclick = () => { draft.splice(i, 1); renderEditor(); };
+      row.append(inp, x); box.appendChild(row);
+    });
+  }
+  $('editBtn').onclick = () => { draft = clone(prompts); renderEditor(); $('editView').classList.remove('hidden'); };
+  $('edAdd').onclick = () => { draft.push('My ____ is better than yours.'); renderEditor(); };
+  $('edDefault').onclick = () => { draft = clone(DEFAULT); renderEditor(); };
+  $('edCancel').onclick = () => $('editView').classList.add('hidden');
+  $('edSave').onclick = () => {
+    const ok = draft.map(t => t.trim()).filter(Boolean).map(t => t.includes('____') ? t : t + ' ____');
+    if (!ok.length) { alert('Add at least one prompt.'); return; }
+    prompts = ok; store.set('bbb-prompts', prompts);
+    g = { round: 0, star: g.star, phase: 'prompt', answer: '' }; save();
+    $('editView').classList.add('hidden'); render();
+  };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') ['how', 'lb', 'editView'].forEach(id => $(id).classList.add('hidden')); });
+
+  renderSound(); render();
+})();
+</script>
+</body>
+</html>
