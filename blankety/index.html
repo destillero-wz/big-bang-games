@@ -109,6 +109,7 @@
       <button class="ghost" id="howBtn">❓ How to play</button>
       <button class="ghost" id="lbBtn">🏆 Leaderboard</button>
       <button class="ghost" id="editBtn">✏️ Edit prompts</button>
+      <button class="ghost" id="skipBtn" title="Jump to the next prompt (→ key)">⏭ Skip to next round</button>
       <button class="ghost" id="resetBtn">↺ New game</button>
     </div>
   </div>
@@ -340,18 +341,21 @@
     }, 100);
   };
   $('postNowBtn').onclick = () => { if (!players.length) { alert('Add the players first.'); return; } clearInterval(iv); countdown(); };
+  let cdToken = 0;   // bumps on skip so an in-flight countdown can't move the next round on
   function countdown() {
+    const my = ++cdToken;
     const ov = $('countdown'), num = $('countNum');
     ov.classList.remove('hidden');
     const steps = ['3', '2', '1', '📮 POST!'];
     let i = 0;
     const step = () => {
+      if (my !== cdToken) return;
       num.textContent = steps[i]; num.className = 'count' + (i === 3 ? ' post' : '');
       void num.offsetWidth; num.style.animation = 'none'; void num.offsetWidth; num.style.animation = '';
       i === 3 ? go() : beep();
       i++;
       if (i < steps.length) setTimeout(step, 900);
-      else setTimeout(() => { ov.classList.add('hidden'); g.phase = 'reveal'; save(); render(); }, 1600);
+      else setTimeout(() => { if (my !== cdToken) return; ov.classList.add('hidden'); g.phase = 'reveal'; save(); render(); }, 1600);
     };
     step();
   }
@@ -388,11 +392,15 @@
     $('summary').textContent = parts.join(' · ');
     g.phase = 'done'; save(); render(); tone(784, 0.3, 0, 'triangle', 0.2);
   };
-  $('nextBtn').onclick = () => {
+  function nextRound() {
+    clearInterval(iv); cdToken++; $('countdown').classList.add('hidden');
     if (g.round >= prompts.length - 1) { showLeaderboard(); return; }
     g.round++; g.star = players.length ? (g.star + 1) % players.length : 0;
     g.phase = 'prompt'; g.answer = ''; g.matched = []; g.funny = null; save(); render();
-  };
+  }
+  $('nextBtn').onclick = nextRound;
+  // Skip straight to the next prompt from any point in the round (no points given)
+  $('skipBtn').onclick = nextRound;
 
   // ---------- Leaderboard ----------
   function showLeaderboard() {
@@ -439,7 +447,11 @@
     g = { round: 0, star: g.star, phase: 'prompt', answer: '' }; save();
     $('editView').classList.add('hidden'); render();
   };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') ['how', 'lb', 'editView'].forEach(id => $(id).classList.add('hidden')); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') ['how', 'lb', 'editView'].forEach(id => $(id).classList.add('hidden'));
+    // → moves on, unless you're typing a name or answer
+    if (e.key === 'ArrowRight' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) && $('editView').classList.contains('hidden')) nextRound();
+  });
 
   renderSound(); render();
 })();
