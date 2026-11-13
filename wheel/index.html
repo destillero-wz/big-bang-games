@@ -5,30 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wheel of Wazoku</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1024;
-    --bg2: #1a1f45;
+    --bg: #0F1934;
+    --bg2: #1B2957;
     --panel: rgba(255,255,255,0.06);
     --line: rgba(255,255,255,0.12);
-    --text: #f3f4ff;
-    --muted: #a3a8d6;
-    --accent: #ffb703;
-    --tile: #16a34a;
-    --good: #22c55e;
-    --bad: #f43f5e;
+    --text: #ffffff;
+    --muted: #C5C4C2;
+    --accent: #FF6E00;
+    --tile: #2AA845;
+    --good: #2AA845;
+    --bad: #C20D19;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; }
   body {
-    font-family: Inter, system-ui, sans-serif; color: var(--text);
+    font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif; color: var(--text);
     background: radial-gradient(ellipse at top, var(--bg2), var(--bg) 70%) fixed, var(--bg);
   }
   .hidden { display: none !important; }
   button {
     font: inherit; font-weight: 600; font-size: 15px; border: 0; border-radius: 10px; padding: 9px 14px;
-    background: var(--accent); color: #1b1d3a; cursor: pointer; white-space: nowrap;
+    background: var(--accent); color: #070f25; cursor: pointer; white-space: nowrap;
   }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
   button.ghost:hover { border-color: var(--accent); }
@@ -43,7 +43,7 @@
   .tools { display: flex; gap: 8px; flex-wrap: wrap; }
   .rounds { display: flex; gap: 6px; flex-wrap: wrap; }
   .rounds button { padding: 5px 11px; background: var(--panel); color: var(--text); border: 1px solid var(--line); font-size: 14px; }
-  .rounds button.on { background: var(--accent); color: #1b1d3a; border-color: var(--accent); }
+  .rounds button.on { background: var(--accent); color: #070f25; border-color: var(--accent); }
   .rounds button.done { opacity: 0.5; }
 
   .main { flex: 1; display: grid; grid-template-columns: 1fr minmax(300px, 380px); gap: 16px; min-height: 0; }
@@ -52,16 +52,16 @@
   .right { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 
   /* Puzzle board */
-  .boardwrap { background: #0b3d1f; border: 6px solid var(--accent); border-radius: 18px; padding: clamp(8px, 1.2vw, 16px); box-shadow: 0 8px 30px rgba(0,0,0,0.45); }
+  .boardwrap { background: #1B2957; border: 6px solid var(--accent); border-radius: 18px; padding: clamp(8px, 1.2vw, 16px); box-shadow: 0 8px 30px rgba(0,0,0,0.45); }
   .board { display: grid; gap: 5px; }
   .brow { display: grid; grid-template-columns: repeat(14, 1fr); gap: 5px; }
   .cell { aspect-ratio: 5 / 6; border-radius: 6px; background: rgba(255,255,255,0.05); }
   .cell.letter { background: var(--tile); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25); }
-  .cell.letter.shown { background: #fffdf5; color: #111; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(16px, 2.6vw, 40px); animation: flip 0.45s ease-out; }
-  .cell.letter.lit { background: #60a5fa; animation: none; }
+  .cell.letter.shown { background: #ffffff; color: #111; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(16px, 2.6vw, 40px); animation: flip 0.45s ease-out; }
+  .cell.letter.lit { background: #4d7cff; animation: none; }
   .cell.punct { background: transparent; color: var(--text); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(16px, 2.6vw, 40px); }
   @keyframes flip { from { transform: rotateY(90deg); } to { transform: rotateY(0); } }
-  .category { text-align: center; font-size: clamp(18px, 2.2vw, 28px); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: var(--accent); color: #1b1d3a; border-radius: 12px; padding: 8px; }
+  .category { text-align: center; font-size: clamp(18px, 2.2vw, 28px); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: var(--accent); color: #070f25; border-radius: 12px; padding: 8px; }
 
   .msg { min-height: 28px; text-align: center; font-size: clamp(16px, 1.8vw, 22px); font-weight: 700; }
   .msg.good { color: var(--good); } .msg.bad { color: var(--bad); }
@@ -69,7 +69,7 @@
   /* Letters */
   .letters { display: grid; grid-template-columns: repeat(13, 1fr); gap: 5px; }
   .letters button { padding: 6px 0; font-size: 17px; font-weight: 800; background: var(--panel); color: var(--text); border: 1px solid var(--line); }
-  .letters button.vowel { background: rgba(96,165,250,0.18); }
+  .letters button.vowel { background: rgba(0,59,242,0.3); }
   .letters button.used { opacity: 0.2; }
   .letters button:not(:disabled):hover { border-color: var(--accent); }
 
@@ -89,11 +89,11 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text); border: 2px solid transparent; font-size: 14px; }
   .chip b { color: var(--accent); }
-  .chip.active { border-color: var(--accent); background: rgba(255,183,3,0.18); }
+  .chip.active { border-color: var(--accent); background: rgba(255,110,0,0.18); }
   .addrow { display: flex; gap: 6px; margin-top: 8px; }
   .addrow input { flex: 1; min-width: 0; }
 
-  .overlay { position: fixed; inset: 0; background: rgba(5,7,20,0.9); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+  .overlay { position: fixed; inset: 0; background: rgba(7,15,37,0.9); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
   .panel { max-width: 860px; width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; padding: 22px; max-height: 92vh; overflow-y: auto; }
   .panel h2 { margin: 0 0 8px; }
   .panel p, .panel li { color: var(--muted); line-height: 1.6; }
@@ -101,7 +101,7 @@
   .ed-row { display: grid; grid-template-columns: 200px 1fr 36px; gap: 8px; margin-bottom: 8px; }
   .ed-row button { padding: 6px; }
   .ed-actions { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-top: 14px; }
-  .celebrate { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(5,7,20,0.75); z-index: 15; text-align: center; }
+  .celebrate { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(7,15,37,0.75); z-index: 15; text-align: center; }
   .celebrate h2 { font-size: clamp(36px, 6vw, 80px); margin: 0; }
   .celebrate p { font-size: clamp(18px, 2.4vw, 30px); margin: 0; color: var(--accent); font-weight: 800; }
 </style>
@@ -335,7 +335,8 @@
   // ---------- Wheel ----------
   const WEDGES = [500, 300, 900, 250, 'BANKRUPT', 600, 400, 700, 300, 'LOSE A TURN', 800, 350,
                   450, 500, 1000, 300, 'BANKRUPT', 550, 400, 650, 250, 750, 350, 600];
-  const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#111111', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#ffffff', '#14b8a6', '#f59e0b'];
+  const COLORS = ['#FF6E00', '#003BF2', '#F9DD28', '#2AA845', '#1B2957', '#C20D19'];
+  const DARK_WEDGE = ['#003BF2', '#2AA845', '#1B2957', '#C20D19'];
   const wctx = $('wheel').getContext('2d');
   let angle = 0, spinning = false;
   const SEG = Math.PI * 2 / WEDGES.length;
@@ -345,19 +346,20 @@
     WEDGES.forEach((v, i) => {
       const a0 = angle + i * SEG - Math.PI / 2 - SEG / 2;
       wctx.beginPath(); wctx.moveTo(c, c); wctx.arc(c, c, r, a0, a0 + SEG); wctx.closePath();
-      wctx.fillStyle = v === 'BANKRUPT' ? '#111111' : v === 'LOSE A TURN' ? '#ffffff' : COLORS[i % COLORS.length];
+      const wc = v === 'BANKRUPT' ? '#070f25' : v === 'LOSE A TURN' ? '#C5C4C2' : COLORS[i % COLORS.length];
+      wctx.fillStyle = wc;
       if (v !== 'BANKRUPT' && COLORS[i % COLORS.length] === '#111111') wctx.fillStyle = '#7c3aed';
       if (v !== 'LOSE A TURN' && COLORS[i % COLORS.length] === '#ffffff') wctx.fillStyle = '#84cc16';
       wctx.fill(); wctx.strokeStyle = 'rgba(0,0,0,0.35)'; wctx.lineWidth = 3; wctx.stroke();
       wctx.save(); wctx.translate(c, c); wctx.rotate(a0 + SEG / 2); wctx.textAlign = 'right'; wctx.textBaseline = 'middle';
-      wctx.fillStyle = v === 'BANKRUPT' ? '#ffffff' : '#111111';
-      wctx.font = typeof v === 'number' ? '800 34px Inter, sans-serif' : '800 20px Inter, sans-serif';
+      wctx.fillStyle = (v === 'BANKRUPT' || DARK_WEDGE.includes(wc)) ? '#ffffff' : '#070f25';
+      wctx.font = typeof v === 'number' ? '800 34px Calibri, "Segoe UI", sans-serif' : '800 20px Calibri, "Segoe UI", sans-serif';
       wctx.fillText(typeof v === 'number' ? v : (v === 'BANKRUPT' ? '💀 BANKRUPT' : 'LOSE A TURN'), r - 16, 0);
       wctx.restore();
     });
-    wctx.beginPath(); wctx.arc(c, c, 46, 0, Math.PI * 2); wctx.fillStyle = '#ffb703'; wctx.fill();
-    wctx.lineWidth = 6; wctx.strokeStyle = '#1b1d3a'; wctx.stroke();
-    wctx.beginPath(); wctx.arc(c, c, r, 0, Math.PI * 2); wctx.lineWidth = 10; wctx.strokeStyle = '#ffb703'; wctx.stroke();
+    wctx.beginPath(); wctx.arc(c, c, 46, 0, Math.PI * 2); wctx.fillStyle = '#FF6E00'; wctx.fill();
+    wctx.lineWidth = 6; wctx.strokeStyle = '#070f25'; wctx.stroke();
+    wctx.beginPath(); wctx.arc(c, c, r, 0, Math.PI * 2); wctx.lineWidth = 10; wctx.strokeStyle = '#FF6E00'; wctx.stroke();
   }
   // Which wedge is under the pointer at the top
   const wedgeAtPointer = () => {

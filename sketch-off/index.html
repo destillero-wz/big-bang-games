@@ -5,30 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spooky Sketch-Off</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1024;
-    --bg2: #1a1f45;
+    --bg: #0F1934;
+    --bg2: #1B2957;
     --panel: rgba(255,255,255,0.06);
     --line: rgba(255,255,255,0.12);
-    --text: #f3f4ff;
-    --muted: #a3a8d6;
-    --accent: #ff7a1a;
-    --purple: #a78bfa;
-    --good: #22c55e;
-    --bad: #f43f5e;
+    --text: #ffffff;
+    --muted: #C5C4C2;
+    --accent: #FF6E00;
+    --purple: #F9DD28;
+    --good: #2AA845;
+    --bad: #C20D19;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
-    font-family: Inter, system-ui, sans-serif; color: var(--text);
-    background: radial-gradient(ellipse at top, #2a1846, var(--bg) 70%) fixed, var(--bg);
+    font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif; color: var(--text);
+    background: radial-gradient(ellipse at top, #1B2957, var(--bg) 70%) fixed, var(--bg);
   }
   .hidden { display: none !important; }
   button {
     font: inherit; font-weight: 600; font-size: 16px; border: 0; border-radius: 10px; padding: 10px 16px;
-    background: var(--accent); color: #1b1d3a; cursor: pointer; white-space: nowrap;
+    background: var(--accent); color: #070f25; cursor: pointer; white-space: nowrap;
   }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
   button.ghost:hover { border-color: var(--accent); }
@@ -43,19 +43,19 @@
   .tools { display: flex; gap: 8px; flex-wrap: wrap; }
   .rounds { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
   .rounds button { padding: 6px 12px; background: var(--panel); color: var(--text); border: 1px solid var(--line); font-size: 14px; }
-  .rounds button.on { background: var(--accent); color: #1b1d3a; border-color: var(--accent); }
+  .rounds button.on { background: var(--accent); color: #070f25; border-color: var(--accent); }
   .rounds button.done { opacity: 0.5; }
 
   .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 10px; }
   .badge { display: inline-block; border-radius: 999px; padding: 6px 16px; font-weight: 800; font-size: clamp(14px, 1.6vw, 20px); letter-spacing: 0.06em; text-transform: uppercase; }
-  .badge.warm { background: #16a34a; color: #fff; }
-  .badge.medium { background: var(--accent); color: #1b1d3a; }
-  .badge.hard { background: #7c3aed; color: #fff; }
+  .badge.warm { background: #2AA845; color: #fff; }
+  .badge.medium { background: var(--accent); color: #070f25; }
+  .badge.hard { background: #C20D19; color: #fff; }
   .roundno { color: var(--muted); font-size: clamp(16px, 1.8vw, 22px); font-weight: 600; }
   .prompt { font-size: clamp(36px, 6.5vw, 96px); font-weight: 800; line-height: 1.1; max-width: 1200px; text-shadow: 0 4px 0 rgba(0,0,0,0.35); }
   .timer { font-size: clamp(64px, 12vw, 170px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
   /* Last 10 seconds: glowing, throbbing timer and a pulsing blood-red vignette */
-  .timer.low { color: #ff3b1f; text-shadow: 0 0 24px rgba(255,59,31,0.9), 0 0 60px rgba(255,122,26,0.6); animation: throb 1s ease-in-out infinite; }
+  .timer.low { color: #ff4d1a; text-shadow: 0 0 24px rgba(255,59,31,0.9), 0 0 60px rgba(255,122,26,0.6); animation: throb 1s ease-in-out infinite; }
   .timer.low::before { content: '🎃 '; }
   .timer.low::after { content: ' 🎃'; }
   @keyframes throb { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(1); } 45% { transform: scale(1.08); } }
@@ -78,7 +78,7 @@
   .controls button { font-size: 18px; padding: 12px 20px; }
   .hint { color: var(--muted); font-size: 13px; text-align: center; }
 
-  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 24px; background: rgba(13,16,36,0.94); z-index: 10; }
+  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 24px; background: rgba(7,15,37,0.94); z-index: 10; }
   .overlay h2 { margin: 0; font-size: clamp(40px, 7vw, 100px); font-weight: 800; }
   .overlay .big { font-size: clamp(22px, 3vw, 40px); font-weight: 800; color: var(--accent); max-width: 1000px; }
   .overlay p { color: var(--muted); font-size: clamp(16px, 2vw, 24px); margin: 0; max-width: 900px; line-height: 1.5; }

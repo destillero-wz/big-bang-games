@@ -5,29 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Spooky Pictionary</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1024;
-    --bg2: #1a1f45;
+    --bg: #0F1934;
+    --bg2: #1B2957;
     --panel: rgba(255,255,255,0.06);
     --line: rgba(255,255,255,0.12);
-    --text: #f3f4ff;
-    --muted: #a3a8d6;
-    --accent: #ff7a1a;
-    --good: #22c55e;
-    --bad: #f43f5e;
+    --text: #ffffff;
+    --muted: #C5C4C2;
+    --accent: #FF6E00;
+    --good: #2AA845;
+    --bad: #C20D19;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
-    font-family: Inter, system-ui, sans-serif; color: var(--text); overflow: hidden;
-    background: radial-gradient(ellipse at top, #2a1846, var(--bg) 70%) fixed, var(--bg);
+    font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif; color: var(--text); overflow: hidden;
+    background: radial-gradient(ellipse at top, #1B2957, var(--bg) 70%) fixed, var(--bg);
   }
   .hidden { display: none !important; }
   button {
     font: inherit; font-weight: 600; font-size: 15px; border: 0; border-radius: 10px; padding: 9px 14px;
-    background: var(--accent); color: #1b1d3a; cursor: pointer; white-space: nowrap;
+    background: var(--accent); color: #070f25; cursor: pointer; white-space: nowrap;
   }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
   button.ghost:hover { border-color: var(--accent); }
@@ -54,14 +54,14 @@
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
   .overlay {
     position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-    background: rgba(13,16,36,0.88); text-align: center; padding: 20px;
+    background: rgba(7,15,37,0.88); text-align: center; padding: 20px;
   }
   .overlay h2 { margin: 0; font-size: clamp(28px, 5vw, 64px); font-weight: 800; }
   .overlay .word { font-size: clamp(36px, 7vw, 96px); font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.02em; }
   .overlay p { color: var(--muted); font-size: 18px; margin: 0; max-width: 640px; line-height: 1.5; }
   .overlay ol { text-align: left; font-size: 17px; line-height: 1.7; color: var(--text); max-width: 640px; margin: 0; }
   .peek {
-    position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #1b1d3a; color: var(--accent);
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #070f25; color: var(--accent);
     font-size: 28px; font-weight: 800; padding: 8px 18px; border-radius: 12px; text-transform: uppercase;
   }
 </style>
@@ -131,7 +131,7 @@
   };
 
   // ---------- Drawing ----------
-  const COLORS = ['#111111', '#ff7a1a', '#7c3aed', '#16a34a', '#dc2626', '#2563eb', '#8b5a2b', '#9ca3af'];
+  const COLORS = ['#111111', '#FF6E00', '#7c3aed', '#16a34a', '#dc2626', '#2563eb', '#8b5a2b', '#9ca3af'];
   const SIZES = [4, 9, 18, 34];
   const canvas = $('canvas'), ctx = canvas.getContext('2d');
   let color = COLORS[0], size = SIZES[1], erasing = false;
@@ -244,11 +244,11 @@
     win.document.open();
     win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Your secret word (don't share!)</title>
       <style>
-        body{margin:0;font-family:Inter,system-ui,sans-serif;background:#1b1530;color:#f3f4ff;display:flex;flex-direction:column;
+        body{margin:0;font-family:Calibri, Carlito, 'Segoe UI', system-ui, sans-serif;background:#1B2957;color:#ffffff;display:flex;flex-direction:column;
              align-items:center;justify-content:center;height:100vh;gap:14px;text-align:center;padding:16px;box-sizing:border-box}
-        .w{font-size:40px;font-weight:800;color:#ff7a1a;text-transform:uppercase;line-height:1.1}
-        .h{color:#a3a8d6;font-size:14px}
-        button,select{font:inherit;font-weight:600;border-radius:10px;padding:8px 12px;border:1px solid rgba(255,255,255,.2);background:#2a2350;color:#f3f4ff;cursor:pointer}
+        .w{font-size:40px;font-weight:800;color:#FF6E00;text-transform:uppercase;line-height:1.1}
+        .h{color:#C5C4C2;font-size:14px}
+        button,select{font:inherit;font-weight:600;border-radius:10px;padding:8px 12px;border:1px solid rgba(255,255,255,.2);background:#1B2957;color:#ffffff;cursor:pointer}
         .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
       </style></head><body>
       <div class="h">🤫 Your secret word. Keep this window off your screen share!</div>

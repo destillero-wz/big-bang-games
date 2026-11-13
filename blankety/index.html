@@ -5,30 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Blankety Blank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1024;
-    --bg2: #1a1f45;
+    --bg: #0F1934;
+    --bg2: #1B2957;
     --panel: rgba(255,255,255,0.06);
     --line: rgba(255,255,255,0.12);
-    --text: #f3f4ff;
-    --muted: #a3a8d6;
-    --accent: #ffb703;
-    --pink: #f472b6;
-    --good: #22c55e;
-    --bad: #f43f5e;
+    --text: #ffffff;
+    --muted: #C5C4C2;
+    --accent: #FF6E00;
+    --pink: #F9DD28;
+    --good: #2AA845;
+    --bad: #C20D19;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; }
   body {
-    font-family: Inter, system-ui, sans-serif; color: var(--text);
-    background: radial-gradient(ellipse at top, #3a1b4d, var(--bg) 70%) fixed, var(--bg);
+    font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif; color: var(--text);
+    background: radial-gradient(ellipse at top, #1B2957, var(--bg) 70%) fixed, var(--bg);
   }
   .hidden { display: none !important; }
   button {
     font: inherit; font-weight: 600; font-size: 16px; border: 0; border-radius: 10px; padding: 10px 16px;
-    background: var(--accent); color: #1b1d3a; cursor: pointer; white-space: nowrap;
+    background: var(--accent); color: #070f25; cursor: pointer; white-space: nowrap;
   }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
   button.ghost:hover { border-color: var(--accent); }
@@ -44,7 +44,7 @@
   .tools { display: flex; gap: 8px; flex-wrap: wrap; }
   .rounds { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
   .rounds button { padding: 5px 11px; min-width: 36px; background: var(--panel); color: var(--text); border: 1px solid var(--line); font-size: 14px; }
-  .rounds button.on { background: var(--pink); color: #1b1d3a; border-color: var(--pink); }
+  .rounds button.on { background: var(--pink); color: #070f25; border-color: var(--pink); }
   .rounds button.played { opacity: 0.5; }
 
   .main { flex: 1; display: grid; grid-template-columns: 1fr minmax(260px, 320px); gap: 16px; min-height: 0; }
@@ -53,7 +53,7 @@
   /* Stage */
   .stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 10px; }
   .roundinfo { color: var(--muted); font-weight: 600; font-size: clamp(14px, 1.6vw, 18px); }
-  .star { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(90deg, #f472b6, #ffb703); color: #1b1d3a; font-weight: 800; border-radius: 999px; padding: 10px 22px; font-size: clamp(18px, 2.4vw, 30px); box-shadow: 0 6px 24px rgba(244,114,182,0.35); }
+  .star { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(90deg, #FF6E00, #F9DD28); color: #070f25; font-weight: 800; border-radius: 999px; padding: 10px 22px; font-size: clamp(18px, 2.4vw, 30px); box-shadow: 0 6px 24px rgba(249,221,40,0.35); }
   .prompt { font-size: clamp(26px, 4vw, 56px); font-weight: 800; line-height: 1.2; max-width: 1100px; text-shadow: 0 4px 0 rgba(0,0,0,0.35); }
   .blank { display: inline-block; min-width: 4.5em; border-bottom: 0.12em solid var(--accent); color: var(--accent); padding: 0 0.15em; }
   .blank.filled { border-bottom-color: var(--pink); color: var(--pink); animation: pop 0.6s ease-out; }
@@ -73,8 +73,8 @@
   .scoring .hint { color: var(--muted); font-size: 14px; }
   .pick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
   .pick button { background: rgba(255,255,255,0.08); color: var(--text); border: 2px solid transparent; }
-  .pick button.on { border-color: var(--good); background: rgba(34,197,94,0.22); }
-  .pick.funny button.on { border-color: var(--pink); background: rgba(244,114,182,0.22); }
+  .pick button.on { border-color: var(--good); background: rgba(42,168,69,0.22); }
+  .pick.funny button.on { border-color: var(--pink); background: rgba(249,221,40,0.22); }
 
   /* Sidebar */
   .side { display: flex; flex-direction: column; gap: 10px; }
@@ -91,7 +91,7 @@
   .addrow input { flex: 1; min-width: 0; font-size: 15px; padding: 8px 10px; }
   .addrow button { padding: 8px 12px; }
 
-  .overlay { position: fixed; inset: 0; background: rgba(5,7,20,0.92); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 14px; text-align: center; }
+  .overlay { position: fixed; inset: 0; background: rgba(7,15,37,0.92); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 14px; text-align: center; }
   .count { font-size: clamp(120px, 26vw, 360px); font-weight: 800; color: var(--accent); animation: pop 0.5s ease-out; line-height: 1; }
   .count.post { font-size: clamp(64px, 12vw, 170px); color: var(--pink); }
   .panel { max-width: 860px; width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; padding: 22px; text-align: left; max-height: 90vh; overflow-y: auto; }
@@ -114,7 +114,7 @@
   .ex-step p { margin: 0 0 6px; font-size: 14px; line-height: 1.45; color: var(--muted); }
   .bubble { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 5px 9px; margin: 4px 0; font-size: 14px; color: var(--text); }
   .bubble b { color: var(--accent); }
-  .bubble.star { background: linear-gradient(90deg, rgba(244,114,182,0.35), rgba(255,183,3,0.35)); }
+  .bubble.star { background: linear-gradient(90deg, rgba(249,221,40,0.35), rgba(255,110,0,0.35)); }
   .bubble.win { outline: 2px solid var(--good); }
   .bubble.lol { outline: 2px solid var(--pink); }
   .ex-result { text-align: center; margin-top: 14px; font-size: 17px; color: var(--text); line-height: 1.6; }

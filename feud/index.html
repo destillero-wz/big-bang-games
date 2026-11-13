@@ -5,31 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wazoku Says</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1024;
-    --bg2: #1a1f45;
+    --bg: #0F1934;
+    --bg2: #1B2957;
     --panel: rgba(255,255,255,0.06);
     --line: rgba(255,255,255,0.12);
-    --text: #f3f4ff;
-    --muted: #a3a8d6;
-    --accent: #ffb703;
-    --slot: #1d2a8a;
-    --slot-open: #2638b3;
-    --good: #22c55e;
-    --bad: #f43f5e;
+    --text: #ffffff;
+    --muted: #C5C4C2;
+    --accent: #FF6E00;
+    --slot: #003BF2;
+    --slot-open: #2b5cff;
+    --good: #2AA845;
+    --bad: #C20D19;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; }
   body {
-    font-family: Inter, system-ui, sans-serif; color: var(--text);
+    font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif; color: var(--text);
     background: radial-gradient(ellipse at top, var(--bg2), var(--bg) 70%) fixed, var(--bg);
   }
   .hidden { display: none !important; }
   button {
     font: inherit; font-weight: 600; font-size: 16px; border: 0; border-radius: 10px; padding: 10px 16px;
-    background: var(--accent); color: #1b1d3a; cursor: pointer;
+    background: var(--accent); color: #070f25; cursor: pointer;
   }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
   button.ghost:hover { border-color: var(--accent); }
@@ -49,7 +49,7 @@
   .tools { display: flex; gap: 8px; flex-wrap: wrap; }
   .rounds { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
   .rounds button { padding: 6px 12px; min-width: 40px; background: var(--panel); color: var(--text); border: 1px solid var(--line); }
-  .rounds button.on { background: var(--accent); color: #1b1d3a; border-color: var(--accent); }
+  .rounds button.on { background: var(--accent); color: #070f25; border-color: var(--accent); }
   .rounds button.done { opacity: 0.55; }
 
   .stage { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 16px; }
@@ -66,7 +66,7 @@
   }
   .slot:hover { transform: scale(1.01); }
   .slot .num {
-    flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--accent); color: #1b1d3a;
+    flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--accent); color: #070f25;
     display: flex; align-items: center; justify-content: center; font-size: 0.8em;
   }
   .slot .txt { flex: 1; text-transform: uppercase; }
@@ -76,7 +76,7 @@
   .slot.picked { box-shadow: 0 0 0 3px var(--accent); }
   .slot .who {
     display: inline-block; margin-left: 10px; font-style: normal; font-size: 0.55em; font-weight: 700; text-transform: none;
-    background: var(--accent); color: #1b1d3a; border-radius: 999px; padding: 2px 10px; vertical-align: middle;
+    background: var(--accent); color: #070f25; border-radius: 999px; padding: 2px 10px; vertical-align: middle;
   }
   .award input { width: 150px; }
   @keyframes flip { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
@@ -100,13 +100,13 @@
   /* Big X */
   #bigX {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 20; pointer-events: none;
-    font-size: min(60vw, 60vh); font-weight: 800; color: var(--bad); text-shadow: 0 0 60px rgba(244,63,94,0.8);
+    font-size: min(60vw, 60vh); font-weight: 800; color: var(--bad); text-shadow: 0 0 60px rgba(194,13,25,0.8);
   }
   #bigX.show { animation: xpop 0.9s ease-out forwards; }
   @keyframes xpop { 0% { opacity: 0; transform: scale(0.4); } 15% { opacity: 1; transform: scale(1.05); } 70% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
 
   /* ---------- Panels ---------- */
-  .overlay { position: fixed; inset: 0; background: rgba(5,7,20,0.85); z-index: 10; overflow-y: auto; padding: 24px 16px; }
+  .overlay { position: fixed; inset: 0; background: rgba(7,15,37,0.85); z-index: 10; overflow-y: auto; padding: 24px 16px; }
   .panel { max-width: 1100px; margin: 0 auto; background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
   .panel h2 { margin: 0 0 4px; }
   .panel p { color: var(--muted); margin: 0 0 16px; }

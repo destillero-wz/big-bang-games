@@ -5,27 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Big Bang Boggle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1024;
-    --bg2: #1a1f45;
+    --bg: #0F1934;
+    --bg2: #1B2957;
     --panel: rgba(255,255,255,0.06);
     --line: rgba(255,255,255,0.12);
-    --text: #f3f4ff;
-    --muted: #a3a8d6;
-    --tile: #fdf6e3;
-    --tile-text: #1b1d3a;
-    --accent: #ffb703;
-    --accent2: #8b5cf6;
-    --good: #22c55e;
-    --bad: #f43f5e;
-    --sel: #ffb703;
+    --text: #ffffff;
+    --muted: #C5C4C2;
+    --tile: #ffffff;
+    --tile-text: #070f25;
+    --accent: #FF6E00;
+    --accent2: #003BF2;
+    --good: #2AA845;
+    --bad: #C20D19;
+    --sel: #FF6E00;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; }
   body {
-    font-family: Inter, system-ui, sans-serif;
+    font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif;
     color: var(--text);
     background: radial-gradient(ellipse at top, var(--bg2), var(--bg) 70%) fixed, var(--bg);
     -webkit-tap-highlight-color: transparent;
@@ -59,7 +59,7 @@
   .howto-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: start; }
   @media (max-width: 860px) { .howto-grid { grid-template-columns: 1fr; } }
   .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
-  .step > b { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: #1b1d3a; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .step > b { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: #070f25; display: flex; align-items: center; justify-content: center; font-size: 22px; }
   .step h3 { margin: 4px 0 2px; font-size: 22px; }
   .step p { margin: 0; font-size: 18px; color: var(--text); opacity: 0.85; }
   .score-table { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
@@ -72,7 +72,7 @@
   .link-btn { background: none; border: 0; color: var(--muted); text-decoration: underline; font-size: 14px; width: auto; padding: 4px; margin-top: 10px; }
   button {
     font: inherit; font-weight: 600; font-size: 17px; border: 0; border-radius: 12px; padding: 13px 18px;
-    background: var(--accent); color: #1b1d3a; cursor: pointer; width: 100%; margin-top: 14px;
+    background: var(--accent); color: #070f25; cursor: pointer; width: 100%; margin-top: 14px;
   }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
   button:disabled { opacity: 0.5; cursor: default; }
@@ -98,14 +98,14 @@
   }
   .tile {
     background: var(--tile); color: var(--tile-text); border-radius: 14px; display: flex; align-items: center;
-    justify-content: center; font-weight: 800; font-size: clamp(28px, 10vw, 46px); box-shadow: 0 4px 0 #c9bfa5;
+    justify-content: center; font-weight: 800; font-size: clamp(28px, 10vw, 46px); box-shadow: 0 4px 0 #C5C4C2;
     transition: transform 0.08s, background 0.08s;
   }
   .tile.qu { font-size: clamp(22px, 8vw, 38px); }
-  .tile.sel { background: var(--sel); box-shadow: 0 4px 0 #b47f00; transform: scale(0.95); }
-  .tile.last { background: #ffd166; }
-  .board.flash-good .tile.sel { background: var(--good); box-shadow: 0 4px 0 #15803d; color: #fff; }
-  .board.flash-bad .tile.sel { background: var(--bad); box-shadow: 0 4px 0 #9f1239; color: #fff; }
+  .tile.sel { background: var(--sel); box-shadow: 0 4px 0 #b34d00; transform: scale(0.95); }
+  .tile.last { background: #F9DD28; }
+  .board.flash-good .tile.sel { background: var(--good); box-shadow: 0 4px 0 #1d7a32; color: #fff; }
+  .board.flash-bad .tile.sel { background: var(--bad); box-shadow: 0 4px 0 #7d0810; color: #fff; }
   .board.waiting .tile { color: transparent; }
 
   .current { min-height: 44px; text-align: center; font-size: 28px; font-weight: 800; letter-spacing: 0.08em; }
