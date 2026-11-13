@@ -102,6 +102,23 @@
   .ed-row button { padding: 6px; }
   .ed-actions { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-top: 14px; }
   .summary { font-size: clamp(16px, 1.9vw, 22px); color: var(--good); font-weight: 700; }
+  /* Example walkthrough */
+  .ex { max-width: 980px; }
+  .ex h2 { text-align: center; }
+  .ex-prompt { text-align: center; font-size: clamp(20px, 2.4vw, 30px); font-weight: 800; margin: 6px 0 14px; color: var(--text); }
+  .ex-prompt .blank { min-width: 3em; }
+  .ex-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 860px) { .ex-steps { grid-template-columns: 1fr 1fr; } }
+  .ex-step { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  .ex-step h4 { margin: 0 0 8px; font-size: 15px; color: var(--accent); }
+  .ex-step p { margin: 0 0 6px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+  .bubble { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 5px 9px; margin: 4px 0; font-size: 14px; color: var(--text); }
+  .bubble b { color: var(--accent); }
+  .bubble.star { background: linear-gradient(90deg, rgba(244,114,182,0.35), rgba(255,183,3,0.35)); }
+  .bubble.win { outline: 2px solid var(--good); }
+  .bubble.lol { outline: 2px solid var(--pink); }
+  .ex-result { text-align: center; margin-top: 14px; font-size: 17px; color: var(--text); line-height: 1.6; }
+  .ex-result b { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -112,6 +129,7 @@
     <div class="tools">
       <button class="ghost" id="soundBtn">🔊 Sound on</button>
       <button class="ghost" id="howBtn">❓ How to play</button>
+      <button class="ghost" id="exBtn">👀 See an example</button>
       <button class="ghost" id="lbBtn">🏆 Leaderboard</button>
       <button class="ghost" id="editBtn">✏️ Edit prompts</button>
       <button class="ghost" id="skipBtn" title="Jump to the next prompt (→ key)">⏭ Skip to next round</button>
@@ -195,6 +213,47 @@
       <li>Next round, someone new is the star. Most points at the end wins!</li>
     </ol>
     <button id="howClose" style="font-size:18px;padding:12px 26px">Let's play!</button>
+    <button class="ghost" id="howEx" style="font-size:18px;padding:12px 26px;margin-left:8px">👀 See an example</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="example">
+  <div class="panel ex">
+    <h2>👀 Example round: ⭐ Dennis is the star</h2>
+    <div class="ex-prompt">The best fruit in the world is the <span class="blank">&nbsp;</span>.</div>
+    <div class="ex-steps">
+      <div class="ex-step">
+        <h4>1. Everyone writes</h4>
+        <p>Everyone secretly writes what they think <b>Dennis</b> will say.</p>
+        <p>Dennis secretly writes his <b>real</b> answer.</p>
+      </div>
+      <div class="ex-step">
+        <h4>2. 3, 2, 1… POST!</h4>
+        <p>Everyone posts in the Teams chat at the same time:</p>
+        <div class="bubble"><b>Ana:</b> mango</div>
+        <div class="bubble"><b>Ben:</b> a Terry's Chocolate Orange 🍫</div>
+        <div class="bubble"><b>Cara:</b> strawberry</div>
+        <div class="bubble"><b>Raj:</b> Mango!</div>
+      </div>
+      <div class="ex-step">
+        <h4>3. Dennis reveals</h4>
+        <p>Dennis tells us his answer…</p>
+        <div class="bubble star"><b>⭐ Dennis:</b> MANGO 🥭</div>
+        <p style="margin-top:8px">Then everyone reacts 😂 to the funniest answer in the chat.</p>
+      </div>
+      <div class="ex-step">
+        <h4>4. Points!</h4>
+        <div class="bubble win"><b>Ana</b> matched: <b>+1</b> ✅</div>
+        <div class="bubble win"><b>Raj</b> matched: <b>+1</b> ✅ <small>(close enough counts!)</small></div>
+        <div class="bubble lol"><b>Ben</b> funniest: <b>+1</b> 😂</div>
+        <div class="bubble"><b>Cara:</b> 0 this time</div>
+      </div>
+    </div>
+    <div class="ex-result">
+      Two ways to score: <b>know your colleagues</b> (match the star) or <b>be the funniest</b> 😂.<br>
+      The star doesn't score that round. Next round, someone new is the ⭐ star!
+    </div>
+    <div style="text-align:center;margin-top:14px"><button id="exClose" style="font-size:18px;padding:12px 26px">Got it, let's play!</button></div>
   </div>
 </div>
 
@@ -475,6 +534,10 @@
   // ---------- How to play / editor ----------
   $('howBtn').onclick = () => $('how').classList.remove('hidden');
   $('howClose').onclick = () => $('how').classList.add('hidden');
+  const showExample = () => { $('how').classList.add('hidden'); $('example').classList.remove('hidden'); };
+  $('exBtn').onclick = showExample;
+  $('howEx').onclick = showExample;
+  $('exClose').onclick = () => $('example').classList.add('hidden');
   let draft = null;
   function renderEditor() {
     const box = $('edRows'); box.innerHTML = '';
@@ -498,7 +561,7 @@
     $('editView').classList.add('hidden'); render();
   };
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') ['how', 'lb', 'editView'].forEach(id => $(id).classList.add('hidden'));
+    if (e.key === 'Escape') ['how', 'lb', 'editView', 'example'].forEach(id => $(id).classList.add('hidden'));
     // → moves on, unless you're typing a name or answer
     const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || !$('editView').classList.contains('hidden');
     if (!typing && e.key === 'ArrowRight') nextRound();
