@@ -13,6 +13,7 @@ Games for the Wazoku Friday Big Bang. They're hosted free on GitHub Pages, with 
 | Spooky Sketch-Off | https://destillero-wz.github.io/big-bang-games/sketch-off/ | See below |
 | Wheel of Wazoku | https://destillero-wz.github.io/big-bang-games/wheel/ | See below |
 | Blankety Blank | https://destillero-wz.github.io/big-bang-games/blankety/ | See below |
+| Who Wants to Be a Wazillionaire? | https://destillero-wz.github.io/big-bang-games/millionaire/ | See below |
 
 ## Spooky Pictionary
 
@@ -66,3 +67,12 @@ Share this screen on Teams. Each prompt shows big on screen with its level and a
 4. **Reveal:** type the star's answer and click **⭐ Reveal answer**. It fills the blank on screen.
 5. **Scoring:** click everyone who matched (+1 each; close matches count). Pick the 😂 funniest answer (+1 bonus), then click **✅ Give points**.
 6. **Winner:** after the last prompt, **🏆 Leaderboard** shows the winner. If there's a tie, click **⚡ Play the tiebreaker**: someone who isn't tied becomes the star, and whoever matches wins. **✏️ Edit prompts** changes the prompts and the tiebreaker; use `____` for the blank.
+
+## Who Wants to Be a Wazillionaire?
+
+1. **Playing as a team:** the whole team climbs one money ladder from £100 to £1,000,000. Safe amounts are £1,000 and £32,000.
+2. **Teams poll:** for each question, click **📋 Copy for Teams poll** to copy the question and its options, then paste them into a Teams poll. The **Question** and **A–D** buttons copy one part at a time if you need to fill in the fields separately.
+3. **Locking in:** click the majority answer (or press **A–D**), then **🔒 Final answer: reveal!** (or **Space**).
+4. **Lives:** a wrong answer costs one of 3 lives, and the team carries on. With no lives left, the team leaves with the last safe amount.
+5. **Lifelines** (once each): **50:50**, **👥 Ask the Audience** (AI-simulated votes from 100 people, 50 UK and 50 Colombia, not real data) and **🔄 Switch** (swaps in a spare question).
+6. **Moving around:** **← →** or the numbered buttons. **✏️ Edit questions** changes the questions and the spares.
