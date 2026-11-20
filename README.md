@@ -73,6 +73,6 @@ Share this screen on Teams. Each prompt shows big on screen with its level and a
 1. **Playing as a team:** the whole team climbs one money ladder from £100 to £1,000,000. Safe amounts are £1,000 and £32,000.
 2. **Teams poll:** for each question, click **📋 Copy for Teams poll** to copy the question and its options, then paste them into a Teams poll. The **Question** and **A–D** buttons copy one part at a time if you need to fill in the fields separately.
 3. **Locking in:** click the majority answer (or press **A–D**), then **🔒 Final answer: reveal!** (or **Space**).
-4. **Lives:** a wrong answer costs one of 3 lives, and the team carries on. With no lives left, the team leaves with the last safe amount.
+4. **Lives and backups:** a wrong answer costs one of 3 lives, and the team gets a random backup question from the same difficulty bracket for the same prize (at least 3 backups per bracket, never repeated in a game). With no lives left, the team leaves with the last safe amount.
 5. **Lifelines** (once each): **50:50** and **👥 Ask the Audience** (AI-simulated votes from 100 people, 50 UK and 50 Colombia, not real data).
 6. **Moving around:** **← →** or the numbered buttons. **✏️ Edit questions** changes the questions.

@@ -107,6 +107,9 @@
   .ladder li.safe .m::after { content: ' 🔒'; font-size: 12px; }
   .ladder li.right { color: #8be39d; }
   .ladder li.wrong { color: #ff8a92; text-decoration: line-through; }
+  .ladder li.missed:not(.on) { color: #ffb37a; }
+  .qnav button.missed { border-color: var(--accent); }
+  #nextBtn.retry { background: var(--accent); color: #fff; }
   .ladder li.on { background: var(--accent); color: var(--ink); }
   .ladder li.on .n { color: var(--ink); }
   .ladder li.top .m { color: var(--gold); }
@@ -195,7 +198,7 @@
       <li>We play <b>as one team</b>, climbing the ladder from £100 to <b>£1,000,000</b>.</li>
       <li>Each question goes up on screen, and the host launches a <b>Teams poll</b> with the same A/B/C/D options.</li>
       <li>Everyone votes. The <b>majority answer</b> is the team's final answer.</li>
-      <li>A wrong answer costs one of the team's <b>❤️ 3 lives</b>, but we carry on up the ladder.</li>
+      <li>A wrong answer costs one of the team's <b>❤️ 3 lives</b>, and the team gets a <b>🔄 backup question</b> for the same prize. Get it right to keep climbing.</li>
       <li>Lose all 3 lives and we leave with the last safe amount: <b>£1,000</b> or <b>£32,000</b> 🔒.</li>
       <li>Lifelines, once each: <b>50:50</b> removes two wrong answers, and <b>👥 Ask the Audience</b> shows how 100 people answered.</li>
     </ol>
@@ -265,21 +268,46 @@
     { q: 'Which company made the arcade game Space Invaders?', a: ['Atari', 'Namco', 'Taito', 'Sega'], c: 2, aud: [40, 18, 22, 20] },
     { q: 'What was the first home video games console?', a: ['Atari 2600', 'Magnavox Odyssey', 'Nintendo Entertainment System', 'Sega Master System'], c: 1, aud: [53, 26, 17, 4] }
   ];
-  const DEFAULT_SPARE = [
-    { q: 'What is the name of Mario\'s brother?', a: ['Wario', 'Luigi', 'Toad', 'Yoshi'], c: 1, aud: [2,  96,  1,  1] },
-    { q: 'Sonic the Hedgehog was created as the mascot for which company?', a: ['Nintendo', 'Atari', 'Sega', 'Capcom'], c: 2, aud: [11,  4,  83,  2] },
-    { q: 'In the 1981 arcade game Donkey Kong, what was the character who later became Mario called?', a: ['Hammerman', 'Jumpman', 'Barrelboy', 'Climber'], c: 1, aud: [12,  64,  12,  12] }
+  // Backup questions: when the team gets one wrong and still has lives, they retry with a random backup from the same bracket.
+  const BACKUPS = [
+    // Easy (Q1–5)
+    [
+      { q: 'Which tech company owns Xbox?', a: ['Sony', 'Microsoft', 'Apple', 'Google'], c: 1, aud: [7, 89, 2, 2] },
+      { q: 'What do players type at the end of a match to say "good game"?', a: ['GG', 'WP', 'GL', 'EZ'], c: 0, aud: [83, 8, 4, 5] },
+      { q: 'In which game do players jump out of a flying "Battle Bus" onto an island?', a: ['PUBG', 'Apex Legends', 'Fortnite', 'Call of Duty: Warzone'], c: 2, aud: [13, 6, 74, 7] },
+      { q: 'What is the in-game currency in Roblox called?', a: ['Robux', 'Robucks', 'Blox Coins', 'Rocash'], c: 0, aud: [72, 19, 6, 3] }
+    ],
+    // Medium (Q6–10)
+    [
+      { q: 'What is the name of the female lead character in GTA 6?', a: ['Lucia', 'Maria', 'Sofia', 'Elena'], c: 0, aud: [48, 20, 16, 16] },
+      { q: 'In 2023, the FIFA video game series was renamed what?', a: ['EA Sports FC', 'FIFA Ultimate', 'Football World', 'EA Soccer'], c: 0, aud: [77, 12, 5, 6] },
+      { q: 'Which game series stars the soldier Master Chief?', a: ['Gears of War', 'Halo', 'Destiny', 'Call of Duty'], c: 1, aud: [10, 73, 5, 12] },
+      { q: 'In Mario Kart, which item hunts down the racer in first place?', a: ['Red Shell', 'Blue Shell', 'Banana', 'Bullet Bill'], c: 1, aud: [23, 63, 4, 10] }
+    ],
+    // Hard (Q11–13)
+    [
+      { q: 'The Witcher games were made by a studio from which country?', a: ['Czech Republic', 'Poland', 'Russia', 'Germany'], c: 1, aud: [19, 47, 16, 18] },
+      { q: 'Tomb Raider and Lara Croft were created by a studio in which country?', a: ['USA', 'UK', 'France', 'Japan'], c: 1, aud: [35, 43, 10, 12] },
+      { q: "Gamescom, the world's biggest gaming fair, is held in which country?", a: ['USA', 'Japan', 'South Korea', 'Germany'], c: 3, aud: [24, 16, 11, 49] },
+      { q: "What was Nintendo's red-and-black 3D headset from 1995, which flopped?", a: ['Power Glove', 'Virtual Boy', 'Game Visor', 'Nintendo VR'], c: 1, aud: [19, 50, 14, 17] },
+      { q: 'How much did Microsoft pay for Minecraft in 2014?', a: ['$500 million', '$1 billion', '$2.5 billion', '$10 billion'], c: 2, aud: [13, 27, 43, 17] }
+    ],
+    // Very hard (Q14–15)
+    [
+      { q: 'What game was played at the first known video game tournament, at Stanford in 1972?', a: ['Pong', 'Tennis for Two', 'Asteroids', 'Spacewar!'], c: 3, aud: [52, 19, 7, 22] },
+      { q: 'Thousands of unsold Atari "E.T." game cartridges were famously buried in a landfill in which US state?', a: ['Nevada', 'New Mexico', 'Arizona', 'Texas'], c: 1, aud: [26, 38, 22, 14] },
+      { q: 'Which company released the first handheld console with swappable cartridges, the Microvision, in 1979?', a: ['Milton Bradley', 'Nintendo', 'Atari', 'Mattel'], c: 0, aud: [18, 24, 41, 17] }
+    ]
   ];
 
   const store = {
     get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
-  const QSET = 2; // bump when DEFAULT changes so old saved questions/games are dropped
+  const QSET = 3; // bump when DEFAULT changes so old saved questions/games are dropped
   if (store.get('bbm-qset') !== QSET) { try { ['bbm-questions','bbm-spares','bbm-game'].forEach(k => localStorage.removeItem(k)); } catch (e) {} store.set('bbm-qset', QSET); }
   let questions = store.get('bbm-questions') || clone(DEFAULT);
-  let spares = store.get('bbm-spares') || clone(DEFAULT_SPARE);
-  const fresh = () => ({ q: 0, locks: {}, results: {}, lives: 3, used: {}, removed: {}, swaps: {} });
+  const fresh = () => ({ q: 0, locks: {}, results: {}, lives: 3, used: {}, removed: {}, swaps: {}, misses: {} });
   let g = store.get('bbm-game') || fresh();
   let muted = !!store.get('bbm-muted');
   const save = () => store.set('bbm-game', g);
@@ -304,15 +332,29 @@
     life: () => [880, 1175].forEach((f, i) => tone(f, 0.25, i * 0.1, 'sine', 0.15))
   };
 
-  // The question on screen (a spare if the Switch lifeline was used here)
-  const cur = () => questions[g.q];
-  const tier = i => i < 5 ? 0 : i < 10 ? 1 : 2;
+  // The question on screen: a backup if the team has had a miss at this level
+  const tier = i => i < 5 ? 0 : i < 10 ? 1 : i < 13 ? 2 : 3;
+  const qAt = i => { const s = g.swaps[i]; return s && BACKUPS[s[0]] && BACKUPS[s[0]][s[1]] ? BACKUPS[s[0]][s[1]] : questions[i]; };
+  const cur = () => qAt(g.q);
+  const canRetry = i => g.results[i] === 'wrong' && g.lives > 0;
+  function useBackup() {
+    const i = g.q, taken = new Set(Object.values(g.swaps).map(s => s.join('-')));
+    const free = t => BACKUPS[t].map((_, k) => [t, k]).filter(x => !taken.has(x.join('-')));
+    // same bracket first, then the nearest bracket if that's run out
+    const order = [0, 1, 2, 3].sort((a, b) => Math.abs(a - tier(i)) - Math.abs(b - tier(i)) || b - a);
+    let pool = []; for (const t of order) { pool = free(t); if (pool.length) break; }
+    if (!pool.length) return false;
+    g.swaps[i] = pool[Math.floor(Math.random() * pool.length)];
+    g.misses[i] = (g.misses[i] || 0) + 1;
+    delete g.results[i]; delete g.locks[i]; delete g.removed[i];
+    save(); sfx.life(); render(); return true;
+  }
 
   // Audience estimate for edited questions with no simulated survey
   function estimateAud(qq, i) {
     let h = 0; for (const ch of qq.q) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     const rnd = () => { h = (h * 1103515245 + 12345) >>> 0; return h / 4294967296; };
-    const right = [78, 55, 38][tier(i)] + Math.floor(rnd() * 12);
+    const right = [78, 55, 38, 25][tier(i)] + Math.floor(rnd() * 12);
     const w = [0, 1, 2, 3].map(k => k === qq.c ? 0 : 0.3 + rnd());
     const sum = w.reduce((s, x) => s + x, 0);
     const out = w.map(x => Math.round(x / sum * (100 - right)));
@@ -324,7 +366,7 @@
   let busy = false, token = 0;
   function render() {
     const qq = cur(), i = g.q, res = g.results[i], lock = g.locks[i], removed = g.removed[i] || [];
-    $('qinfo').innerHTML = `Question ${i + 1} of ${questions.length} · for <b>${money(LADDER[i])}</b>${SAFE.includes(i) ? ' 🔒 safe' : ''}${g.swaps[i] != null ? ' · 🔄 switched' : ''}`;
+    $('qinfo').innerHTML = `Question ${i + 1} of ${questions.length} · for <b>${money(LADDER[i])}</b>${SAFE.includes(i) ? ' 🔒 safe' : ''}${g.swaps[i] ? ` · 🔄 backup question${g.misses[i] > 1 ? ' ' + g.misses[i] : ''}` : ''}`;
     $('qbox').textContent = qq.q;
     const opts = $('opts'); opts.innerHTML = '';
     qq.a.forEach((t, k) => {
@@ -350,12 +392,13 @@
     const st = $('status');
     if (!busy) {
       st.className = 'status' + (res === 'right' ? ' good' : res === 'wrong' ? ' bad' : '');
-      st.textContent = res === 'right' ? `✅ Correct! ${money(LADDER[i])}` : res === 'wrong' ? `❌ Not this time: it was ${L[qq.c]}, ${qq.a[qq.c]}` : lock != null ? `Locking in ${L[lock]}… is that your final answer?` : 'Launch the poll, then click the team\'s answer (or press A–D).';
+      st.textContent = res === 'right' ? `✅ Correct! ${money(LADDER[i])}` : res === 'wrong' ? `❌ Not this time: it was ${L[qq.c]}, ${qq.a[qq.c]}.${g.lives > 0 ? ' Lost a life, so try a backup question for ' + money(LADDER[i]) + '.' : ''}` : lock != null ? `Locking in ${L[lock]}… is that your final answer?` : 'Launch the poll, then click the team\'s answer (or press A–D).';
     }
     $('revealBtn').disabled = lock == null || !!res || busy;
     $('prevBtn').disabled = i === 0 || busy;
     $('nextBtn').disabled = busy;
-    $('nextBtn').textContent = i >= questions.length - 1 ? '🏁 Finish' : 'Next question →';
+    $('nextBtn').textContent = canRetry(i) ? '🔄 Backup question' : i >= questions.length - 1 ? '🏁 Finish' : 'Next question →';
+    $('nextBtn').classList.toggle('retry', canRetry(i));
     // lifelines
     [['ll50', 'fifty'], ['llAud', 'aud']].forEach(([id, k]) => {
       $(id).classList.toggle('used', !!g.used[k]);
@@ -367,7 +410,7 @@
     const lad = $('ladder'); lad.innerHTML = '';
     LADDER.slice(0, questions.length).forEach((m, k) => {
       const li = document.createElement('li');
-      li.className = [SAFE.includes(k) ? 'safe' : '', k === i ? 'on' : '', g.results[k] || '', k === LADDER.length - 1 ? 'top' : ''].join(' ');
+      li.className = [SAFE.includes(k) ? 'safe' : '', k === i ? 'on' : '', g.results[k] || (g.misses[k] ? 'missed' : ''), k === LADDER.length - 1 ? 'top' : ''].join(' ');
       li.innerHTML = `<span class="n">${k + 1}</span><span class="m">${money(m)}</span>`;
       li.onclick = () => goTo(k);
       lad.appendChild(li);
@@ -377,7 +420,7 @@
     const nav = $('qnav'); nav.innerHTML = '';
     questions.forEach((_, k) => {
       const b = document.createElement('button'); b.textContent = k + 1;
-      b.className = (k === i ? 'on ' : '') + (g.results[k] || '');
+      b.className = (k === i ? 'on ' : '') + (g.results[k] || (g.misses[k] ? 'missed' : ''));
       b.onclick = () => goTo(k); nav.appendChild(b);
     });
   }
@@ -418,6 +461,7 @@
     g.q = Math.max(0, Math.min(questions.length - 1, k)); save(); render();
   }
   function next() {
+    if (canRetry(g.q) && useBackup()) return;
     if (g.q >= questions.length - 1) {
       if (g.results[g.q] === 'right') win();
       else end('🏁 Game over', g.lives ? winnings() : safeAmount(), g.lives ? 'That\'s the team\'s winnings. Not bad at all!' : 'You leave with your last safe amount.');
@@ -468,13 +512,6 @@
     $('audView').classList.remove('hidden'); sfx.life();
     setTimeout(() => { box.classList.add('go'); [...box.querySelectorAll('.fill')].forEach((f, n) => { const k = [0, 1, 2, 3].filter(x => !removed.includes(x))[n]; f.style.height = Math.max(2, pct[k] * 0.82) + '%'; }); }, 80);
   };
-  if ($('llSwap')) $('llSwap').onclick = () => {
-    if (g.used.swap || g.results[g.q] || g.locks[g.q] != null) return;
-    if (!confirm('Use the 🔄 Switch lifeline and swap this question for a new one?')) return;
-    g.swaps[g.q] = Math.min(tier(g.q), spares.length - 1); g.used.swap = true;
-    delete g.removed[g.q]; save(); sfx.life(); render();
-  };
-
   // Copy for Teams poll
   let copiedT;
   async function copy(text) {
@@ -518,7 +555,7 @@
   });
 
   // ---- Editor ----
-  let draft, draftSpare;
+  let draft;
   function rowHtml(qq, label, idx, kind) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     return `<div class="edq" data-kind="${kind}" data-i="${idx}">
@@ -531,19 +568,19 @@
     $('edRows').innerHTML = draft.map((qq, i) => rowHtml(qq, `Q${i + 1} · ${money(LADDER[i])}`, i, 'q')).join('')
 ;
   }
-  $('editBtn').onclick = () => { draft = clone(questions); draftSpare = clone(spares); renderEditor(); $('editView').classList.remove('hidden'); };
+  $('editBtn').onclick = () => { draft = clone(questions); renderEditor(); $('editView').classList.remove('hidden'); };
   $('edCancel').onclick = () => $('editView').classList.add('hidden');
-  $('edDefault').onclick = () => { draft = clone(DEFAULT); draftSpare = clone(DEFAULT_SPARE); renderEditor(); };
+  $('edDefault').onclick = () => { draft = clone(DEFAULT); renderEditor(); };
   $('edSave').onclick = () => {
     document.querySelectorAll('#edRows .edq').forEach(row => {
-      const list = row.dataset.kind === 'q' ? draft : draftSpare, i = +row.dataset.i, old = list[i];
+      const list = draft, i = +row.dataset.i, old = list[i];
       const nq = { q: row.querySelector('.q').value.trim() || old.q, a: [...row.querySelectorAll('.a')].map((x, k) => x.value.trim() || old.a[k]), c: +row.querySelector('.c').value };
       const same = nq.q === old.q && nq.c === old.c && nq.a.every((x, k) => x === old.a[k]);
       nq.aud = same ? old.aud : null;
       list[i] = nq;
     });
-    questions = draft; spares = draftSpare;
-    store.set('bbm-questions', questions); store.set('bbm-spares', spares);
+    questions = draft;
+    store.set('bbm-questions', questions);
     $('editView').classList.add('hidden'); render();
   };
 
