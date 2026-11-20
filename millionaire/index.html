@@ -78,9 +78,6 @@
   .opt:disabled:not(.correct):not(.wrongpick):not(.locked) { opacity: 0.55; }
   @keyframes flash { 50% { filter: brightness(1.5); } }
 
-  .pollbar { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
-  .pollbar button { padding: 6px 12px; font-size: 14px; }
-  .pollbar .chip { background: var(--panel); color: var(--text); border: 1px solid var(--line); }
   .copied { color: var(--good); font-weight: 700; min-width: 70px; }
   .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
   .controls button { font-size: 18px; padding: 11px 20px; }
@@ -163,13 +160,6 @@
       <div class="qinfo" id="qinfo"></div>
       <div class="qbox" id="qbox"></div>
       <div class="opts" id="opts"></div>
-      <div class="pollbar">
-        <span>Teams poll:</span>
-        <button id="copyAll" title="Copies the question with its options">📋 Copy for Teams poll</button>
-        <button class="chip" id="copyQ" title="Copies just the question">Question</button>
-        <span id="copyOpts"></span>
-        <span class="copied" id="copied"></span>
-      </div>
       <div class="status" id="status"></div>
       <div class="controls">
         <button class="ghost" id="prevBtn">← Back</button>
@@ -196,11 +186,12 @@
     <h2>💷 How to play</h2>
     <ol>
       <li>We play <b>as one team</b>, climbing the ladder from £100 to <b>£1,000,000</b>.</li>
-      <li>Each question goes up on screen, and the host launches a <b>Teams poll</b> with the same A/B/C/D options.</li>
-      <li>Everyone votes. The <b>majority answer</b> is the team's final answer.</li>
+      <li>The host reads out each question and counts down: <b>3, 2, 1, type!</b></li>
+      <li>Everyone types <b>A, B, C or D</b> in the Teams chat at the same time. No waiting to copy everyone else!</li>
+      <li>The <b>majority answer</b> is the team's final answer. If it's close, we talk it over and vote again.</li>
       <li>A wrong answer costs one of the team's <b>❤️ 3 lives</b>, and the team gets a <b>🔄 backup question</b> for the same prize. Get it right to keep climbing.</li>
       <li>Lose all 3 lives and we leave with the last safe amount: <b>£1,000</b> or <b>£32,000</b> 🔒.</li>
-      <li>Lifelines, once each: <b>50:50</b> removes two wrong answers, and <b>👥 Ask the Audience</b> shows how 100 people answered.</li>
+      <li>Lifelines, once each: <b>50:50</b> removes two wrong answers, and <b>👥 Ask the Audience</b> shows how 100 people answered. Type <b>50</b> or <b>AUD</b> in the chat before the countdown to ask for one.</li>
     </ol>
     <div class="center"><button id="howClose" style="font-size:18px;padding:12px 26px">Let's play!</button></div>
   </div>
@@ -381,18 +372,10 @@
       b.onclick = () => pick(k);
       opts.appendChild(b);
     });
-    // per-option copy chips
-    const co = $('copyOpts'); co.innerHTML = '';
-    qq.a.forEach((t, k) => {
-      if (removed.includes(k)) return;
-      const b = document.createElement('button'); b.className = 'chip'; b.textContent = L[k];
-      b.title = `Copies "${L[k]}: ${t}"`; b.onclick = () => copy(`${L[k]}: ${t}`);
-      co.appendChild(b);
-    });
     const st = $('status');
     if (!busy) {
       st.className = 'status' + (res === 'right' ? ' good' : res === 'wrong' ? ' bad' : '');
-      st.textContent = res === 'right' ? `✅ Correct! ${money(LADDER[i])}` : res === 'wrong' ? `❌ Not this time: it was ${L[qq.c]}, ${qq.a[qq.c]}.${g.lives > 0 ? ' Lost a life, so try a backup question for ' + money(LADDER[i]) + '.' : ''}` : lock != null ? `Locking in ${L[lock]}… is that your final answer?` : 'Launch the poll, then click the team\'s answer (or press A–D).';
+      st.textContent = res === 'right' ? `✅ Correct! ${money(LADDER[i])}` : res === 'wrong' ? `❌ Not this time: it was ${L[qq.c]}, ${qq.a[qq.c]}.${g.lives > 0 ? ' Lost a life, so try a backup question for ' + money(LADDER[i]) + '.' : ''}` : lock != null ? `Locking in ${L[lock]}… is that your final answer?` : '3, 2, 1, type A–D in the chat! Then click the majority answer (or press A–D).';
     }
     $('revealBtn').disabled = lock == null || !!res || busy;
     $('prevBtn').disabled = i === 0 || busy;
@@ -512,23 +495,6 @@
     $('audView').classList.remove('hidden'); sfx.life();
     setTimeout(() => { box.classList.add('go'); [...box.querySelectorAll('.fill')].forEach((f, n) => { const k = [0, 1, 2, 3].filter(x => !removed.includes(x))[n]; f.style.height = Math.max(2, pct[k] * 0.82) + '%'; }); }, 80);
   };
-  // Copy for Teams poll
-  let copiedT;
-  async function copy(text) {
-    let ok = false;
-    try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {
-      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-      try { ok = document.execCommand('copy'); } catch (e2) {} ta.remove();
-    }
-    $('copied').textContent = ok ? '✓ Copied' : 'Copy failed'; clearTimeout(copiedT);
-    copiedT = setTimeout(() => $('copied').textContent = '', 1800);
-  }
-  $('copyAll').onclick = () => {
-    const qq = cur(), removed = g.removed[g.q] || [];
-    copy(`Q${g.q + 1} for ${money(LADDER[g.q])}: ${qq.q}\n` + qq.a.map((t, k) => removed.includes(k) ? null : `${L[k]}: ${t}`).filter(Boolean).join('\n'));
-  };
-  $('copyQ').onclick = () => copy(`Q${g.q + 1} for ${money(LADDER[g.q])}: ${cur().q}`);
-
   // Buttons and keys
   $('revealBtn').onclick = reveal;
   $('nextBtn').onclick = next;
