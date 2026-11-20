@@ -93,7 +93,7 @@
   /* Side: lifelines, lives, ladder */
   .side { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
   .lifelines { display: flex; gap: 8px; justify-content: center; }
-  .ll { width: 78px; height: 50px; border-radius: 50%; background: var(--bg2); color: var(--text); border: 2px solid var(--accent); font-size: 15px; padding: 0; position: relative; }
+  .ll { width: 96px; height: 50px; border-radius: 50%; background: var(--bg2); color: var(--text); border: 2px solid var(--accent); font-size: 15px; padding: 0; position: relative; }
   .ll small { display: block; font-size: 10px; font-weight: 600; color: var(--muted); }
   .ll.used { opacity: 0.35; }
   .ll.used::after { content: ''; position: absolute; left: 8px; right: 8px; top: 50%; border-top: 3px solid var(--bad); transform: rotate(-20deg); }
@@ -179,7 +179,6 @@
       <div class="lifelines">
         <button class="ll" id="ll50" title="Removes two wrong answers">50:50<small>remove 2</small></button>
         <button class="ll" id="llAud" title="Shows how 100 (AI-simulated) people answered">👥<small>audience</small></button>
-        <button class="ll" id="llSwap" title="Swap this question for a different one">🔄<small>switch</small></button>
       </div>
       <div class="lives" id="lives"></div>
       <ul class="ladder" id="ladder"></ul>
@@ -198,7 +197,7 @@
       <li>Everyone votes. The <b>majority answer</b> is the team's final answer.</li>
       <li>A wrong answer costs one of the team's <b>❤️ 3 lives</b>, but we carry on up the ladder.</li>
       <li>Lose all 3 lives and we leave with the last safe amount: <b>£1,000</b> or <b>£32,000</b> 🔒.</li>
-      <li>Lifelines, once each: <b>50:50</b> removes two wrong answers, <b>👥 Ask the Audience</b> shows how 100 people answered, and <b>🔄 Switch</b> swaps the question for a new one.</li>
+      <li>Lifelines, once each: <b>50:50</b> removes two wrong answers, and <b>👥 Ask the Audience</b> shows how 100 people answered.</li>
     </ol>
     <div class="center"><button id="howClose" style="font-size:18px;padding:12px 26px">Let's play!</button></div>
   </div>
@@ -229,7 +228,7 @@
 <div class="overlay hidden" id="editView">
   <div class="panel" style="width:min(1000px,100%)">
     <h2>✏️ Edit questions</h2>
-    <p class="note" style="text-align:left">15 ladder questions, plus 3 spare questions for the 🔄 Switch lifeline (easy for Q1–5, medium for Q6–10, hard for Q11–15). Choose the correct answer for each. If you change a question, its Ask the Audience results are estimated instead of using the simulated survey. Saved in this browser only.</p>
+    <p class="note" style="text-align:left">The 15 ladder questions. Choose the correct answer for each. If you change a question, its Ask the Audience results are estimated instead of using the simulated survey. Saved in this browser only.</p>
     <div id="edRows"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap">
       <button class="ghost" id="edDefault">Restore the gaming set</button>
@@ -304,7 +303,7 @@
   };
 
   // The question on screen (a spare if the Switch lifeline was used here)
-  const cur = () => g.swaps[g.q] != null ? spares[g.swaps[g.q]] : questions[g.q];
+  const cur = () => questions[g.q];
   const tier = i => i < 5 ? 0 : i < 10 ? 1 : 2;
 
   // Audience estimate for edited questions with no simulated survey
@@ -356,12 +355,11 @@
     $('nextBtn').disabled = busy;
     $('nextBtn').textContent = i >= questions.length - 1 ? '🏁 Finish' : 'Next question →';
     // lifelines
-    [['ll50', 'fifty'], ['llAud', 'aud'], ['llSwap', 'swap']].forEach(([id, k]) => {
+    [['ll50', 'fifty'], ['llAud', 'aud']].forEach(([id, k]) => {
       $(id).classList.toggle('used', !!g.used[k]);
     });
     $('ll50').disabled = !!res || busy || (!!g.used.fifty && !(g.removed[i] || []).length);
     $('llAud').disabled = busy;
-    $('llSwap').disabled = !!res || busy || lock != null || !!g.used.swap;
     $('lives').innerHTML = '❤️'.repeat(g.lives) + '🖤'.repeat(Math.max(0, 3 - g.lives)) + '<small>team lives</small>';
     // ladder
     const lad = $('ladder'); lad.innerHTML = '';
@@ -468,7 +466,7 @@
     $('audView').classList.remove('hidden'); sfx.life();
     setTimeout(() => { box.classList.add('go'); [...box.querySelectorAll('.fill')].forEach((f, n) => { const k = [0, 1, 2, 3].filter(x => !removed.includes(x))[n]; f.style.height = Math.max(2, pct[k] * 0.82) + '%'; }); }, 80);
   };
-  $('llSwap').onclick = () => {
+  if ($('llSwap')) $('llSwap').onclick = () => {
     if (g.used.swap || g.results[g.q] || g.locks[g.q] != null) return;
     if (!confirm('Use the 🔄 Switch lifeline and swap this question for a new one?')) return;
     g.swaps[g.q] = Math.min(tier(g.q), spares.length - 1); g.used.swap = true;
@@ -529,7 +527,7 @@
   }
   function renderEditor() {
     $('edRows').innerHTML = draft.map((qq, i) => rowHtml(qq, `Q${i + 1} · ${money(LADDER[i])}`, i, 'q')).join('')
-      + draftSpare.map((qq, i) => rowHtml(qq, `🔄 Spare (${['easy', 'medium', 'hard'][i]})`, i, 's')).join('');
+;
   }
   $('editBtn').onclick = () => { draft = clone(questions); draftSpare = clone(spares); renderEditor(); $('editView').classList.remove('hidden'); };
   $('edCancel').onclick = () => $('editView').classList.add('hidden');
