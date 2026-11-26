@@ -197,22 +197,23 @@
   // o: x, fy (feet y), h, dir, pose ('stand'|'walk'|'sit'), phase, skin, hair, hairStyle, hat, hatColor,
   //    top, sleeve, coat, dress, bottom, shoes, scarf, hold, holdBack, glasses, bagColor, wave, reach, tilt, t
   function figure(o) {
-    const k = (o.h || 300) / 300, sit = o.pose === 'sit', walk = o.pose === 'walk', ph = o.phase || 0;
-    const hipY = sit ? -88 * k : -150 * k, shY = hipY - 93 * k;
+    const k = (o.h || 300) / 300, sit = o.pose === 'sit', walk = o.pose === 'walk', kneel = o.pose === 'kneel', ph = o.phase || 0;
+    const hipY = sit ? -88 * k : kneel ? -100 * k : -150 * k, shY = hipY - 93 * k;
     ctx.save(); ctx.translate(o.x, o.fy); ctx.scale(o.dir || 1, 1);
     El(sit ? 30 * k : (o.hold === 'cart' ? 70 * k : 0), 0, (sit ? 62 : o.hold === 'cart' ? 120 : 44) * k, 8 * k, 'rgba(0,0,0,0.16)');
     const shoe = o.shoes || '#1d1d1f';
-    const leg = (p, col) => {
-      let a1, a2;
+    const leg = (p, col, front) => {
+      let a1, a2, l1 = (sit ? 62 : 78) * k, l2 = (sit ? 84 : 70) * k;
       if (sit) { a1 = 0.04; a2 = Math.PI / 2 + 0.04; }
+      else if (kneel) { if (front) { a1 = 0.15; l1 = 60 * k; a2 = Math.PI / 2; l2 = 92 * k; } else { a1 = Math.PI / 2 + 0.15; a2 = Math.PI - 0.12; l2 = 64 * k; } }
       else if (walk) { a1 = Math.PI / 2 - 0.42 * Math.sin(p); a2 = a1 + 0.55 * Math.max(0, Math.cos(p)); }
       else { a1 = Math.PI / 2 + p; a2 = a1; }
-      const [fx, fy] = limb(0, hipY, a1, (sit ? 62 : 78) * k, a2, (sit ? 84 : 70) * k, 16 * k, col);
-      El(fx + 7 * k, fy + 2 * k, 13 * k, 6 * k, shoe);
+      const [fx, fy] = limb(0, hipY, a1, l1, a2, l2, 16 * k, col);
+      if (kneel && !front) El(fx - 6 * k, fy, 6 * k, 12 * k, shoe); else El(fx + 7 * k, fy + 2 * k, 13 * k, 6 * k, shoe);
     };
     if (o.hold === 'cart') cart(k);
-    leg(walk ? ph + Math.PI : 0.06, shade(o.bottom, -0.3));
-    leg(walk ? ph : -0.05, o.bottom);
+    leg(walk ? ph + Math.PI : 0.06, shade(o.bottom, -0.3), false);
+    leg(walk ? ph : -0.05, o.bottom, true);
     arm(false);
     // torso
     const coatish = o.coat || o.dress;
@@ -227,7 +228,8 @@
     ctx.fillStyle = tg; ctx.fill();
     if (sit && coatish) R(-4 * k, hipY - 14 * k, 64 * k, 22 * k, 9 * k, tg);
     if (o.coat && !sit) Ln(12 * k, shY + 16 * k, 16 * k, hem - 2 * k, shade(o.top, -0.35), 2 * k);
-    if (o.vest) { ctx.save(); ctx.clip(); R(-4 * k, shY, 30 * k, hipY - shY + 14 * k, 0, '#f2f2f0'); R(2 * k, shY + 10 * k, 5 * k, 22 * k, 2 * k, '#1c1c1f'); ctx.restore(); }
+    if (o.vest) { ctx.save(); ctx.clip(); R(-4 * k, shY, 30 * k, hipY - shY + 14 * k, 0, '#f2f2f0'); R(2 * k, shY + 10 * k, 5 * k, 22 * k, 2 * k, o.tie || '#1c1c1f'); ctx.restore(); }
+    if (o.apron) { R(-6 * k, hipY - 8 * k, 34 * k, 86 * k, 4 * k, hgrad(-6 * k, 28 * k, shade(o.apron, 0.05), shade(o.apron, -0.15))); R(-20 * k, hipY - 10 * k, 46 * k, 6 * k, 2 * k, shade(o.apron, -0.2)); }
     if (o.scarf) {
       R(-15 * k, shY - 4 * k, 34 * k, 15 * k, 7 * k, o.scarf);
       R(10 * k, shY + 4 * k, 12 * k, 62 * k, 5 * k, shade(o.scarf, -0.1));
@@ -250,6 +252,7 @@
     } else { El(-6 * k, 4 * k, 9 * k, 6 * k, o.hair || '#888'); }
     if (o.hat === 'beanie') { ctx.beginPath(); ctx.moveTo(-17 * k, -3 * k); ctx.quadraticCurveTo(-17 * k, -30 * k, 2 * k, -27 * k); ctx.quadraticCurveTo(18 * k, -24 * k, 16 * k, -6 * k); ctx.closePath(); ctx.fillStyle = o.hatColor; ctx.fill(); R(-18 * k, -9 * k, 35 * k, 8 * k, 3 * k, shade(o.hatColor, -0.15)); }
     if (o.hat === 'beret') El(-1 * k, -19 * k, 19 * k, 7 * k, o.hatColor, -0.15);
+    if (o.hat === 'chef') { R(-16 * k, -24 * k, 32 * k, 10 * k, 3 * k, '#f4f4f2'); Ci(-8 * k, -40 * k, 14 * k, '#fbfbfa'); Ci(8 * k, -42 * k, 14 * k, '#fbfbfa'); Ci(0, -50 * k, 14 * k, '#ffffff'); R(-15 * k, -42 * k, 30 * k, 22 * k, 2 * k, '#fbfbfa'); }
     if (o.hat === 'cap') { R(-16 * k, -26 * k, 32 * k, 14 * k, 4 * k, o.hatColor); R(8 * k, -14 * k, 16 * k, 4 * k, 2 * k, '#111'); Ci(0, -20 * k, 3 * k, '#d4af37'); }
     if (o.specs) { Ln(6 * k, -3 * k, 17 * k, -3 * k, '#222', 2 * k); Ci(13 * k, -2 * k, 4 * k, 'rgba(200,220,255,0.35)'); }
     ctx.restore();
@@ -269,6 +272,12 @@
       else if (h === 'behind') { a1 = Math.PI / 2 + 0.35; a2 = Math.PI / 2 + 0.22; }
       else if (h === 'wave') { const w = o.wave || 0; a1 = Math.PI / 2 - w * 2.3; a2 = a1 - 0.5 - w * 0.5 + Math.sin((o.t || 0) * 12) * 0.3 * w; }
       else if (h === 'reach') { const w = o.reach || 0; a1 = Math.PI / 2 - w * 1.9; a2 = a1 - 0.15; }
+      else if (h === 'plates') { a1 = Math.PI / 2 - 0.15; a2 = -0.05; }
+      else if (h === 'fork') { a1 = Math.PI / 2 - 0.35 + Math.sin((o.t || 0) * 2 + o.x) * 0.06; a2 = -0.25 - Math.max(0, Math.sin((o.t || 0) * 1.3 + o.x)) * 0.9; }
+      else if (h === 'stir') { a1 = Math.PI / 2 - 0.55 + Math.sin((o.t || 0) * 5) * 0.12; a2 = 0.15; }
+      else if (h === 'chop') { a1 = Math.PI / 2 - 0.5; a2 = 0.1 - Math.abs(Math.sin((o.t || 0) * 9)) * 0.7; }
+      else if (h === 'ring') { a1 = 0.15; a2 = -0.35; }
+      else if (h === 'shake') { a1 = Math.PI / 2 - 2.2 + Math.sin((o.t || 0) * 16) * 0.22; a2 = a1 - 0.7; }
       const sl = o.sleeve || o.top;
       const [hx, hy] = limb(2 * k, shY + 10 * k, a1, 50 * k, a2, 47 * k, 12.5 * k, front ? shade(sl, 0.02) : shade(sl, -0.32));
       Ci(hx, hy, 6.5 * k, front ? o.skin : shade(o.skin, -0.2));
@@ -295,6 +304,20 @@
           R(gx - 3.5 * k, y - 30 * k, 7 * k, 15 * k, 2 * k, '#e9c766');
         }
         El(x + 2 * k, y - 4 * k, 34 * k, 4.5 * k, '#c9ccd1');
+      } else if (h === 'plates') {
+        El(x + 4 * k, y - 4 * k, 30 * k, 6 * k, '#f6f6f4'); dish(o.dish || 'steak', x + 4 * k, y - 9 * k, k);
+        El(x - 34 * k, y + 4 * k, 28 * k, 6 * k, '#efefec'); dish('pasta', x - 34 * k, y - 1 * k, k);
+      } else if (h === 'fork') {
+        Ln(x, y, x + 16 * k, y - 10 * k, '#c9ccd1', 2.5 * k);
+      } else if (h === 'stir') {
+        Ln(x - 4 * k, y - 10 * k, x + 22 * k, y + 34 * k, '#8a6a42', 4 * k);
+      } else if (h === 'chop') {
+        Ln(x, y, x + 10 * k, y + 4 * k, '#222', 4 * k); ctx.beginPath(); ctx.moveTo(x + 8 * k, y + 1 * k); ctx.lineTo(x + 34 * k, y + 10 * k); ctx.lineTo(x + 8 * k, y + 10 * k); ctx.closePath(); ctx.fillStyle = '#d5d9de'; ctx.fill();
+      } else if (h === 'ring') {
+        R(x - 2 * k, y - 10 * k, 18 * k, 12 * k, 2 * k, '#8e1b2b'); R(x - 2 * k, y - 20 * k, 18 * k, 8 * k, 2 * k, '#a8243a');
+        ctx.beginPath(); ctx.arc(x + 7 * k, y - 13 * k, 4.5 * k, 0, Math.PI * 2); ctx.strokeStyle = '#e8c55a'; ctx.lineWidth = 2 * k; ctx.stroke(); Ci(x + 7 * k, y - 18 * k, 2.5 * k, '#e9f6ff');
+      } else if (h === 'shake') {
+        R(x - 7 * k, y - 26 * k, 14 * k, 34 * k, 5 * k, hgrad(x - 7 * k, x + 7 * k, '#eef0f3', '#9aa0a8')); R(x - 5 * k, y - 34 * k, 10 * k, 9 * k, 3 * k, '#c9ccd1');
       } else if (h === 'bag') {
         ctx.beginPath(); ctx.arc(x + 4 * k, y + 8 * k, 11 * k, Math.PI, 0); ctx.strokeStyle = shade(o.bagColor, -0.3); ctx.lineWidth = 3 * k; ctx.stroke();
         R(x - 16 * k, y + 6 * k, 40 * k, 46 * k, 4 * k, hgrad(x - 16 * k, x + 24 * k, shade(o.bagColor, 0.08), shade(o.bagColor, -0.2)));
@@ -588,6 +611,198 @@
     if (a.kind !== 'small') { R(a.x + a.w + 22, a.y + a.h - 50, 58, 34, 2, '#fafafa'); [6, 14, 22].forEach((dy, i) => R(a.x + a.w + 28, a.y + a.h - 50 + dy + 2, 46 - i * 10, 3, 1, '#b9b4ab')); }
   }
 
+  // ================= scene 3: the restaurant =================
+  function dish(type, x, y, k = 1) {
+    if (type === 'pizza') {
+      El(x, y, 24 * k, 5 * k, '#e0a24a'); El(x, y - 1 * k, 20 * k, 4 * k, '#d4432a');
+      [[-9, 0], [0, -2], [8, 1], [-3, 2], [12, -1]].forEach(([dx, dy]) => El(x + dx * k, y + dy * k - 1 * k, 3 * k, 1.6 * k, '#7d1717'));
+    } else if (type === 'pasta') {
+      El(x, y - 3 * k, 18 * k, 8 * k, '#efcd6a');
+      for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.arc(x + i * 6 * k, y - 4 * k, 4 * k, 0.2, Math.PI - 0.2); ctx.strokeStyle = '#d9b24f'; ctx.lineWidth = 1.2 * k; ctx.stroke(); }
+      El(x + 2 * k, y - 8 * k, 8 * k, 3.5 * k, '#c43d2b'); Ci(x + 5 * k, y - 10 * k, 2 * k, '#3d8a4a');
+    } else if (type === 'steak') {
+      El(x - 5 * k, y - 3 * k, 15 * k, 6 * k, '#6b3a24'); Ci(x + 10 * k, y - 3 * k, 4 * k, '#4f9a4f'); Ci(x + 15 * k, y - 2 * k, 3 * k, '#3d8a4a'); Ci(x + 6 * k, y - 1 * k, 3 * k, '#e8c66a');
+    } else if (type === 'salad') {
+      [[-8, 0, '#5aa55a'], [0, -3, '#3d8a4a'], [8, 0, '#6fbf5f'], [3, -1, '#d9452b'], [-4, -2, '#e8c66a']].forEach(([dx, dy, c]) => Ci(x + dx * k, y + dy * k - 2 * k, 5 * k, c));
+    }
+  }
+  function wineGlass(x, y, fill) {
+    Ln(x, y, x, y - 14, 'rgba(235,240,250,0.9)', 2); El(x, y, 6, 1.5, 'rgba(235,240,250,0.8)');
+    ctx.beginPath(); ctx.moveTo(x - 8, y - 34); ctx.quadraticCurveTo(x, y - 8, x + 8, y - 34); ctx.closePath(); ctx.fillStyle = 'rgba(235,240,250,0.5)'; ctx.fill();
+    if (fill) { ctx.beginPath(); ctx.moveTo(x - 6.5, y - 25); ctx.quadraticCurveTo(x, y - 12, x + 6.5, y - 25); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); }
+  }
+  function bottle(x, base, w, h, c, label = true) {
+    R(x - w / 2, base - h * 0.68, w, h * 0.68, w * 0.3, hgrad(x - w / 2, x + w / 2, shade(c, 0.15), shade(c, -0.3)));
+    R(x - w * 0.18, base - h, w * 0.36, h * 0.36, 2, shade(c, -0.1));
+    if (label) R(x - w / 2 + 2, base - h * 0.45, w - 4, h * 0.2, 1, 'rgba(245,238,220,0.9)');
+  }
+  function candle(x, y, lit, t) {
+    R(x - 7, y - 4, 14, 5, 2, '#c9a46a'); R(x - 3, y - 26, 6, 23, 1, '#f6f1e2');
+    if (lit) {
+      glow(x, y - 32, 60, 'rgba(255,200,110,0.35)');
+      const f = 1 + Math.sin(t * 13 + x) * 0.12;
+      ctx.beginPath(); ctx.moveTo(x, y - 40 * f); ctx.quadraticCurveTo(x + 5, y - 30, x, y - 26); ctx.quadraticCurveTo(x - 5, y - 30, x, y - 40 * f); ctx.fillStyle = '#ffd36b'; ctx.fill();
+      El(x, y - 30, 1.6, 3, '#fff6d8');
+    } else { Ln(x, y - 26, x, y - 30, '#222', 1.5); }
+  }
+  function chair(x, dir) {
+    const bx = x - 24 * dir;
+    Ln(x - 22, 694, x - 25, 770, '#2a1a10', 5); Ln(x + 22, 694, x + 25, 770, '#2a1a10', 5);
+    ctx.beginPath(); ctx.moveTo(bx, 692); ctx.quadraticCurveTo(bx - 12 * dir, 630, bx - 4 * dir, 584); ctx.strokeStyle = '#3b2416'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.stroke();
+    R(x - 30, 686, 60, 9, 3, '#3b2416');
+  }
+  function tableTop(cx) { El(cx, 643, 133, 20, '#e9e6df'); El(cx, 640, 129, 16, '#fbfaf7'); }
+  function tableSkirt(cx) {
+    ctx.beginPath(); ctx.moveTo(cx - 133, 645); ctx.lineTo(cx + 133, 645); ctx.lineTo(cx + 137, 712); ctx.quadraticCurveTo(cx, 724, cx - 137, 712); ctx.closePath();
+    ctx.fillStyle = hgrad(cx - 137, cx + 137, '#f3f1ec', '#cdc8be'); ctx.fill();
+    R(cx - 8, 716, 16, 46, 2, '#2a1a10'); El(cx, 764, 42, 6, '#2a1a10');
+  }
+  function pendant(cx) {
+    Ln(cx, 14, cx, 150, '#1a1a1a', 2);
+    glow(cx, 200, 320, 'rgba(255,208,140,0.30)');
+    ctx.beginPath(); ctx.moveTo(cx - 24, 150); ctx.lineTo(cx + 24, 150); ctx.lineTo(cx + 42, 184); ctx.lineTo(cx - 42, 184); ctx.closePath(); ctx.fillStyle = hgrad(cx - 42, cx + 42, '#e2bf72', '#8a6a2a'); ctx.fill();
+    El(cx, 186, 14, 4, '#fff1c9');
+  }
+  function frameArt(x, y, w, h, draw) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 6; R(x - 8, y - 8, w + 16, h + 16, 1, '#c9a46a'); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); draw(); ctx.restore();
+  }
+
+  function restaurantScene(t, B) {
+    const cam = camG(t);
+    // ---- rooms ----
+    ctx.fillStyle = vgrad(0, 640, '#eef0f1', '#dde1e4'); ctx.fillRect(-50, 0, 1180, 640);
+    ctx.strokeStyle = 'rgba(150,160,170,0.35)'; ctx.lineWidth = 1.5;
+    for (let y = 30, i = 0; y < 640; y += 30, i++) { ctx.beginPath(); ctx.moveTo(-50, y); ctx.lineTo(1130, y); ctx.stroke(); for (let x = -50 + (i % 2) * 30; x < 1130; x += 60) { ctx.beginPath(); ctx.moveTo(x, y - 30); ctx.lineTo(x, y); ctx.stroke(); } }
+    ctx.fillStyle = vgrad(640, H, '#9aa0a6', '#6f757b'); ctx.fillRect(-50, 640, 1270, H);
+    for (let x = -50, i = 0; x < 1220; x += 60, i++) for (let y = 640, j = 0; y < H; y += 40, j++) if ((i + j) % 2) { ctx.fillStyle = 'rgba(0,0,0,0.06)'; ctx.fillRect(x, y, 60, 40); }
+    ctx.fillStyle = vgrad(0, 640, '#1c3a35', '#2a4e47'); ctx.fillRect(1125, 0, 2260, 640);
+    R(1220, 470, 2165, 170, 0, vgrad(470, 640, '#6a4630', '#45291b'));
+    for (let x = 1240; x < 3370; x += 130) { ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2; ctx.strokeRect(x, 488, 110, 134); }
+    R(1220, 462, 2165, 9, 0, '#c9a46a');
+    ctx.fillStyle = vgrad(0, 640, '#2a1d18', '#16100d'); ctx.fillRect(3385, 0, 1070, 640);
+    ctx.fillStyle = vgrad(640, H, '#6b4429', '#3f2616'); ctx.fillRect(1220, 640, 3240, H);
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 2;
+    for (let y = 676, i = 0; y < H + 40; y += 42, i++) { ctx.beginPath(); ctx.moveTo(1220, y); ctx.lineTo(4460, y); ctx.stroke(); for (let x = 1220 + (i % 2) * 110; x < 4460; x += 220) { ctx.beginPath(); ctx.moveTo(x, y - 42); ctx.lineTo(x, y); ctx.stroke(); } }
+    ctx.fillStyle = '#141414'; ctx.fillRect(-50, 0, 4510, 14);
+
+    // ---- kitchen ----
+    R(80, 246, 360, 10, 2, '#9aa0a8');
+    [['#c96a2b', 30], ['#e8c66a', 24], ['#7a9a4a', 34], ['#a8322b', 28], ['#d9d4c7', 30], ['#5a7a8a', 26], ['#c96a2b', 22]].forEach(([c, h], i) => { R(96 + i * 48, 246 - h, 30, h, 4, c); R(96 + i * 48, 246 - h - 6, 30, 7, 2, '#555'); });
+    // cook chopping (behind the prep counter)
+    figure({ x: 300, fy: 742, h: 290, dir: 1, skin: SK[3], hair: '#111', hairStyle: 'short', top: '#f2f2ef', bottom: '#2b2b2f', apron: '#d9d6cf', hold: 'chop', t });
+    R(300, 566, 96, 9, 2, '#b78a55'); Ci(372, 562, 8, '#d9452b'); Ci(352, 563, 6, '#4f9a4f');
+    R(150, 575, 300, 14, 2, '#cfd4d9'); R(160, 589, 280, 175, 2, vgrad(589, 764, '#b9bec4', '#80868c'));
+    for (let x = 175; x < 440; x += 90) R(x, 610, 70, 120, 2, 'rgba(255,255,255,0.10)');
+    // hood, hob, chef — DIFFERENCE (easy): the chef's hat is missing in the changed version
+    ctx.beginPath(); ctx.moveTo(700, 120); ctx.lineTo(930, 120); ctx.lineTo(960, 240); ctx.lineTo(670, 240); ctx.closePath(); ctx.fillStyle = hgrad(670, 960, '#d5dade', '#8f959b'); ctx.fill();
+    R(780, 14, 70, 106, 0, hgrad(780, 850, '#c9ced3', '#8f959b'));
+    figure({ x: 640, fy: 742, h: 300, dir: 1, skin: SK[0], hair: '#6b4a2a', hairStyle: 'short', hat: B ? null : 'chef', top: '#f6f6f3', bottom: '#2b2b2f', apron: '#e7e4dd', hold: 'stir', t });
+    for (let i = 0; i < 6; i++) { const p = ((t * 0.45 + i / 6) % 1); Ci(745 + i * 22 + Math.sin(t * 2 + i) * 8, 575 - p * 190, 10 + p * 18, `rgba(255,255,255,${0.35 * (1 - p)})`); }
+    [[760, 0], [880, 1]].forEach(([fx, j]) => { for (let n = 0; n < 4; n++) { const fh = 10 + Math.abs(Math.sin(t * 15 + n + j)) * 8; ctx.beginPath(); ctx.moveTo(fx - 18 + n * 12, 600); ctx.lineTo(fx - 12 + n * 12, 600 - fh); ctx.lineTo(fx - 6 + n * 12, 600); ctx.fillStyle = n % 2 ? '#3fa2ff' : '#ff9a2e'; ctx.fill(); } });
+    El(760, 588, 44, 10, '#2a2a2e'); R(800, 584, 50, 6, 3, '#2a2a2e'); R(850, 548, 60, 42, 4, hgrad(850, 910, '#c9ced3', '#7d8389')); El(880, 548, 30, 5, '#9aa0a8');
+    R(680, 596, 260, 14, 2, '#cfd4d9'); R(690, 610, 240, 154, 2, vgrad(610, 764, '#b9bec4', '#80868c'));
+    Ci(730, 650, 9, '#3a3a40'); Ci(770, 650, 9, '#3a3a40'); Ci(810, 650, 9, '#3a3a40'); R(720, 680, 200, 70, 3, '#2e2e33');
+    // the pass: ticket rail, heat lamps, plates waiting
+    R(955, 330, 160, 6, 2, '#9aa0a8');
+    for (let i = 0; i < 4; i++) { ctx.save(); ctx.translate(972 + i * 38, 336); ctx.rotate(Math.sin(t * 1.5 + i) * 0.05); R(-12, 0, 24, 40, 1, '#fbfaf5'); for (let l = 0; l < 4; l++) R(-8, 6 + l * 8, 16 - (l % 2) * 6, 2, 1, '#aaa'); ctx.restore(); }
+    [[985], [1075]].forEach(([lx]) => { R(lx - 32, 400, 64, 14, 3, '#3a3a40'); const g = ctx.createLinearGradient(0, 414, 0, 516); g.addColorStop(0, 'rgba(255,120,40,0.35)'); g.addColorStop(1, 'rgba(255,120,40,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(lx - 28, 414); ctx.lineTo(lx + 28, 414); ctx.lineTo(lx + 48, 516); ctx.lineTo(lx - 48, 516); ctx.fill(); });
+    R(950, 516, 170, 12, 2, '#cfd4d9'); R(958, 528, 154, 236, 2, vgrad(528, 764, '#b9bec4', '#80868c'));
+    El(990, 513, 28, 6, '#f6f6f4'); dish('salad', 990, 508); El(1075, 513, 28, 6, '#f6f6f4'); dish('steak', 1075, 508);
+    // kitchen door
+    R(1125, 0, 100, 640, 0, vgrad(0, 640, '#1c3a35', '#2a4e47'));
+    R(1130, 290, 90, 350, 2, '#2a1a10'); R(1138, 298, 74, 342, 2, vgrad(298, 640, '#6a4630', '#45291b'));
+    Ci(1175, 380, 18, '#2a1a10'); Ci(1175, 380, 14, 'rgba(180,215,235,0.55)'); R(1150, 470, 50, 8, 3, '#c9a46a');
+    Tx('KITCHEN', 1175, 270, 14, 'rgba(255,255,255,0.6)', 700, 4);
+
+    // ---- dining room ----
+    [1450, 2050, 2600, 3120].forEach(pendant);
+    // specials board — DIFFERENCE (hard): risotto £14 vs £16
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6; R(1668, 180, 204, 254, 4, '#6b4a2e'); ctx.restore();
+    R(1678, 190, 184, 234, 2, '#1f2321');
+    Tx('SPECIALS', 1770, 224, 24, '#f4f1ea', 800, 3); Ln(1712, 244, 1828, 244, 'rgba(244,241,234,0.5)', 1.5);
+    ctx.font = `700 21px ${FONT}`; ctx.fillStyle = 'rgba(244,241,234,0.92)'; ctx.textBaseline = 'middle';
+    [['Soup', '£6'], ['Risotto', B ? '£16' : '£14'], ['Sea bass', '£18'], ['Tiramisu', '£7']].forEach(([n, p], i) => { ctx.textAlign = 'left'; ctx.fillText(n, 1698, 274 + i * 36); ctx.textAlign = 'right'; ctx.fillText(p, 1842, 274 + i * 36); });
+    // window at night
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 16; R(2232, 162, 196, 266, 3, '#2a1a10'); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(2242, 172, 176, 246); ctx.clip();
+    ctx.fillStyle = vgrad(172, 418, '#0e1830', '#2a3a66'); ctx.fillRect(2242, 172, 176, 246);
+    Ci(2380, 214, 16, '#f4ecd0'); Ci(2386, 210, 14, 'rgba(14,24,48,0.25)');
+    [[0, 120], [40, 170], [86, 110], [120, 150]].forEach(([bx, bh]) => { R(2242 + bx, 418 - bh, 44, bh, 0, '#151d33'); for (let wy = 418 - bh + 10; wy < 410; wy += 18) for (let wx = 6; wx < 38; wx += 12) if ((wx * wy) % 5 > 1) { ctx.fillStyle = 'rgba(255,214,140,0.8)'; ctx.fillRect(2242 + bx + wx, wy, 6, 8); } });
+    ctx.restore();
+    Ln(2330, 172, 2330, 418, '#2a1a10', 6); Ln(2242, 295, 2418, 295, '#2a1a10', 6);
+    frameArt(2850, 230, 110, 130, () => { ctx.fillStyle = '#e9dcc0'; ctx.fillRect(2850, 230, 110, 130); Ci(2905, 290, 34, '#e2b33c'); El(2905, 335, 40, 10, '#3d8a4a'); });
+    frameArt(3255, 250, 90, 110, () => { ctx.fillStyle = '#c96a2b'; ctx.fillRect(3255, 250, 90, 110); El(3300, 305, 26, 36, '#f3e3c0'); });
+    frameArt(1290, 240, 90, 110, () => { ctx.fillStyle = '#2c4f8a'; ctx.fillRect(1290, 240, 90, 110); Ci(1335, 300, 26, '#e9c46a'); });
+
+    const diner = (x, dir, o) => figure(Object.assign({ x, fy: 770, h: 275, dir, pose: 'sit', t }, o));
+    // table 1 — DIFFERENCE (medium): pizza becomes spaghetti
+    let cx = 1450; chair(cx - 150, 1); chair(cx + 150, -1); tableTop(cx);
+    El(cx - 62, 636, 30, 6, '#f6f6f4'); dish(B ? 'pasta' : 'pizza', cx - 62, 631); El(cx + 62, 636, 30, 6, '#f6f6f4'); dish('salad', cx + 62, 631);
+    wineGlass(cx - 22, 640, '#7b1e3a'); wineGlass(cx + 26, 640, '#e9d8a6');
+    diner(cx - 150, 1, { skin: SK[1], hair: '#2b1a10', hairStyle: 'long', top: '#c96a2b', bottom: '#2b2b2f', hold: 'fork', holdBack: 'lap' });
+    diner(cx + 150, -1, { skin: SK[4], hair: '#111', hairStyle: 'short', top: '#2f4858', bottom: '#2b2b2f', hold: 'glass', holdBack: 'lap' });
+    tableSkirt(cx);
+    // table 2 — DIFFERENCE (medium): the candle is not lit
+    cx = 2050; chair(cx - 150, 1); chair(cx + 150, -1); tableTop(cx);
+    El(cx - 62, 636, 30, 6, '#f6f6f4'); dish('steak', cx - 62, 631); El(cx + 62, 636, 30, 6, '#f6f6f4'); dish('pasta', cx + 62, 631);
+    candle(cx, 638, !B, t); wineGlass(cx - 30, 640, '#7b1e3a'); wineGlass(cx + 34, 640, '#7b1e3a');
+    diner(cx - 150, 1, { skin: SK[0], hair: '#8a8a8a', hairStyle: 'short', specs: true, top: '#3a3f4a', bottom: '#2b2b2f', hold: 'glass', holdBack: 'lap' });
+    diner(cx + 150, -1, { skin: SK[2], hair: '#1a1a1a', hairStyle: 'bun', top: '#7b2d3b', bottom: '#2b2b2f', hold: 'fork', holdBack: 'lap' });
+    tableSkirt(cx);
+    // table 3 — DIFFERENCE (easy): partway through, he gets down on one knee and proposes
+    cx = 2600; const propose = B && t >= 13;
+    chair(cx - 150, 1); chair(cx + 150, -1); tableTop(cx);
+    El(cx - 62, 636, 30, 6, '#f6f6f4'); dish('pasta', cx - 62, 631); El(cx + 62, 636, 30, 6, '#f6f6f4'); dish('salad', cx + 62, 631);
+    candle(cx, 638, true, t); wineGlass(cx - 30, 640, '#e9d8a6'); wineGlass(cx + 34, 640, '#e9d8a6');
+    if (!propose) diner(cx - 150, 1, { skin: SK[2], hair: '#2a1a10', hairStyle: 'short', top: '#1f2a44', bottom: '#2b2b2f', hold: 'fork', holdBack: 'lap' });
+    diner(cx + 150, -1, { skin: SK[0], hair: '#c48a4a', hairStyle: 'long', top: '#2f6b5a', dress: true, bottom: '#2b2b2f', hold: 'glass', holdBack: 'lap' });
+    tableSkirt(cx);
+    if (propose) figure({ x: cx - 205, fy: 790, h: 280, dir: 1, pose: 'kneel', skin: SK[2], hair: '#2a1a10', hairStyle: 'short', top: '#1f2a44', bottom: '#2b2b2f', hold: 'ring' });
+    // table 4 — DIFFERENCE (medium): the wine bottle is missing
+    cx = 3120; chair(cx - 150, 1); chair(cx + 150, -1); tableTop(cx);
+    El(cx - 62, 636, 30, 6, '#f6f6f4'); dish('steak', cx - 62, 631);
+    if (!B) bottle(cx + 18, 640, 18, 62, '#1f4a2c');
+    wineGlass(cx - 24, 640, '#7b1e3a');
+    diner(cx - 150, 1, { skin: SK[3], hair: '#3b2416', hairStyle: 'bob', top: '#d9cbb2', bottom: '#2b2b2f', hold: 'booklet', holdBack: 'lap' });
+    tableSkirt(cx);
+
+    // ---- bar ----
+    R(3440, 190, 880, 310, 3, 'rgba(160,190,200,0.10)');
+    [335, 465].forEach(y => R(3430, y, 900, 9, 2, '#6b4a2e'));
+    const shelf = [[3470, '#7a1424', 70], [3510, '#c9a46a', 60], [3550, '#3d6b3d', 78], [3590, '#e8e2cf', 66], [3630, '#5a2a14', 72], [3700, null, 80], [3745, '#a8322b', 64], [3790, '#e8c66a', 70], [3835, '#2a2a2e', 76], [3880, '#7a1424', 62], [3925, '#c9a46a', 74], [3970, '#3d6b3d', 66], [4015, '#e8e2cf', 72], [4060, '#5a2a14', 60], [4105, '#a8322b', 70], [4150, '#2a2a2e', 78], [4195, '#c9a46a', 64], [4240, '#7a1424', 70]];
+    // DIFFERENCE (hard): the blue gin bottle is green
+    shelf.forEach(([bx, c, h]) => bottle(bx, 335, 26, h, c || (B ? '#2f8f5a' : '#2f6fd8')));
+    shelf.slice(2, 16).forEach(([bx, c, h], i) => bottle(bx + 10, 465, 24, h - 8, ['#e8e2cf', '#5a2a14', '#c9a46a', '#7a1424', '#3d6b3d'][i % 5]));
+    // neon sign — DIFFERENCE (easy): pink vs blue
+    const neon = B ? '#45b8ff' : '#ff4fa3', fl = 0.9 + Math.sin(t * 9) * 0.05 + (Math.sin(t * 23) > 0.97 ? -0.3 : 0);
+    ctx.save(); ctx.globalAlpha = fl; ctx.shadowColor = neon; ctx.shadowBlur = 34;
+    ctx.font = `italic 700 96px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = neon; ctx.fillText('Luna', 3880, 140);
+    ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.globalAlpha = fl * 0.55; ctx.fillText('Luna', 3880, 140); ctx.restore();
+    Tx('COCKTAIL BAR', 3880, 206, 18, 'rgba(255,255,255,0.65)', 700, 8);
+    figure({ x: 3960, fy: 722, h: 300, dir: -1, skin: SK[1], hair: '#1a1a1a', hairStyle: 'short', top: '#1c1c1f', vest: true, tie: '#7a1424', sleeve: '#f2f2f0', bottom: '#1c1c1f', hold: 'shake', t });
+    R(3480, 546, 840, 18, 3, vgrad(546, 564, '#5a3a26', '#2a1a10'));
+    R(3490, 564, 820, 226, 4, vgrad(564, 790, '#5a3a26', '#2f1d12'));
+    for (let x = 3510; x < 4300; x += 110) { ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2; ctx.strokeRect(x, 584, 90, 170); }
+    Ln(3490, 770, 4310, 770, '#c9a46a', 5);
+    R(3604, 506, 32, 40, 7, 'rgba(220,235,245,0.35)'); R(3610, 520, 20, 14, 2, '#6aa86a'); R(3612, 512, 16, 10, 2, '#8fc28f'); Tx('TIPS', 3620, 498, 11, 'rgba(255,255,255,0.7)', 700, 2);
+    [[3780, '#ff9fb2'], [4180, '#f3d98b']].forEach(([gx, c]) => { Ln(gx, 546, gx, 524, 'rgba(235,240,250,0.9)', 2); ctx.beginPath(); ctx.moveTo(gx - 16, 500); ctx.lineTo(gx + 16, 500); ctx.lineTo(gx, 524); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); Ci(gx + 13, 499, 5, '#7cc05a'); });
+    [3560, 3740].forEach(sx => { Ln(sx, 646, sx, 788, '#c9a46a', 5); El(sx, 790, 22, 5, '#c9a46a'); El(sx, 640, 26, 7, '#2a1a10'); });
+    figure({ x: 3560, fy: 728, h: 275, dir: 1, pose: 'sit', skin: SK[0], hair: '#1a1a1a', hairStyle: 'long', top: '#6a3d7a', dress: true, bottom: '#2b2b2f', hold: 'glass', holdBack: 'lap' });
+
+    // ---- the waiter we follow ----
+    const wx = cam + 560;
+    figure({ x: wx, fy: 815, h: 300, dir: 1, pose: 'walk', phase: wx / 30, skin: SK[2], hair: '#1a1a1a', hairStyle: 'short', top: '#1c1c1f', vest: true, sleeve: '#f2f2f0', bottom: '#1c1c1f', apron: '#2a2a2e', hold: 'plates', dish: 'steak' });
+
+    // ---- foreground plants (closer to the camera) ----
+    const off = cam * 0.35;
+    for (let px = 1500; px < 6000; px += 1250) {
+      const p = px - off;
+      [[-0.9, 60], [-0.45, 80], [0, 90], [0.45, 80], [0.9, 60]].forEach(([a, l]) => { ctx.save(); ctx.translate(p, 840); ctx.rotate(a); El(0, -l / 2 - 10, 14, l / 2 + 10, a % 0.9 === 0 ? '#2f5a3a' : '#264a30'); ctx.restore(); });
+      ctx.beginPath(); ctx.moveTo(p - 44, 836); ctx.lineTo(p + 44, 836); ctx.lineTo(p + 34, 910); ctx.lineTo(p - 34, 910); ctx.closePath(); ctx.fillStyle = hgrad(p - 44, p + 44, '#b5653a', '#7a3f20'); ctx.fill();
+    }
+  }
+
   // ================= scenes and their differences =================
   const SCENES = {
     shop: {
@@ -603,6 +818,22 @@
         { tier: 'medium', text: 'The TV price tag says £249 instead of £299', t: 5, r: 56, pos: () => [833, 324] },
         { tier: 'hard', text: 'The teddy bear vanishes from the shelf partway through', t: 20, from: 13, r: 62, pos: () => [1040, 372] },
         { tier: 'easy', text: 'The green balloon is missing', t: 5, r: 52, pos: () => [1345, 482] }
+      ]
+    },
+    restaurant: {
+      label: '🍝 Restaurant', name: 'The Restaurant', title: '🍝 The Restaurant',
+      intro: "Follow our waiter's shift from the kitchen, through the dining room, to the bar. Watch the staff, the diners, the food and the decor. Then watch again and spot what's changed!",
+      cam: t => ({ x: camG(t), y: Math.sin(t * 4.2) * 1.5, z: 1 }),
+      draw: restaurantScene,
+      diffs: [
+        { tier: 'easy', text: "The chef isn't wearing a chef's hat", t: 2, r: 62, pos: () => [643, 432] },
+        { tier: 'medium', text: 'The candle on the second table is not lit', wx: 2050, r: 46, pos: () => [2050, 608] },
+        { tier: 'hard', text: 'The risotto on the specials board is £16 instead of £14', wx: 1770, r: 50, pos: () => [1826, 310] },
+        { tier: 'easy', text: 'Partway through, a man gets down on one knee and proposes', t: 17, from: 13, r: 105, pos: () => [2400, 650] },
+        { tier: 'medium', text: 'The pizza on the first table has become spaghetti', wx: 1450, r: 44, pos: () => [1388, 628] },
+        { tier: 'hard', text: 'The blue gin bottle behind the bar is green', wx: 3700, r: 50, pos: () => [3700, 300] },
+        { tier: 'medium', text: 'The wine bottle on the last table is missing', wx: 3120, r: 52, pos: () => [3138, 606] },
+        { tier: 'easy', text: 'The neon "Luna" bar sign is blue instead of pink', wx: 3880, r: 130, pos: () => [3880, 150] }
       ]
     },
     gallery: {
