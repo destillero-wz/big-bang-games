@@ -90,6 +90,7 @@
   <div class="top">
     <h1>🔍 Spot the Difference: <span id="sceneName">Black Friday</span></h1>
     <div class="scenes" id="scenes"></div>
+    <button class="ghost" id="keyBtn" title="Opens the answers in a separate window. Share only the game window in Teams so nobody sees it.">🔑 Answer key</button>
     <button class="ghost" id="howBtn">❓ How to play</button>
     <button class="ghost" id="newBtn">↺ New game</button>
   </div>
@@ -128,7 +129,7 @@
         <ol id="top"></ol>
       </div>
       <div class="addp"><input id="pName" placeholder="Add players (e.g. Ana, Tom, Sofia)"><button id="pAdd">Add</button></div>
-      <div class="legend">Easy 1 · Medium 2 · Hard 3 · ⚡ first to spot it +1<br>Click a difficulty label to change it</div>
+      <div class="legend">Easy 1 · Medium 2 · Hard 3 · one guess at a time<br>Click a difficulty label to change it</div>
       <div class="list" id="list"></div>
       <div class="sidebtns"><button class="ghost" id="revealAll">👁 Reveal all</button></div>
     </div>
@@ -141,8 +142,9 @@
     <ol>
       <li>Watch the <b>original</b> scene for 30 seconds.</li>
       <li>Then watch it <b>again</b>. This time there are <b id="howN">7</b> differences. Some are there all the time, and some only happen for a moment.</li>
-      <li>As soon as you spot a difference, <b>type it in the Teams chat</b>. Don't wait for the end!</li>
-      <li>The host reveals each difference. Everyone who spotted it scores: <b>Easy 1</b>, <b>Medium 2</b>, <b>Hard 3</b>. The <b>first person</b> to call it gets a <b>⚡ +1 bonus</b>.</li>
+      <li>📝 <b>Jot down</b> every change you spot, and keep it to yourself!</li>
+      <li>✋ When the video ends, <b>raise your hand</b>. The host picks someone to call out <b>one difference</b>. <b>No lists!</b></li>
+      <li>Got it right? It's revealed and you score: <b>Easy 1</b>, <b>Medium 2</b>, <b>Hard 3</b>. Then it's the next hand's turn.</li>
       <li>Play both scenes. The leaderboard adds up your total.</li>
       <li>Use <b>⇄ Compare</b> to flick between the original and the changed scene, and the slider to scrub through.</li>
     </ol>
@@ -828,9 +830,9 @@
       diffs: [
         { tier: 'easy', text: "The chef isn't wearing a chef's hat", t: 2, r: 62, pos: () => [643, 432] },
         { tier: 'medium', text: 'The candle on the second table is not lit', wx: 2050, r: 46, pos: () => [2050, 608] },
-        { tier: 'hard', text: 'The risotto on the specials board is £16 instead of £14', wx: 1770, r: 50, pos: () => [1826, 310] },
+        { tier: 'medium', text: 'The risotto on the specials board is £16 instead of £14', wx: 1770, r: 50, pos: () => [1826, 310] },
         { tier: 'easy', text: 'Partway through, a man gets down on one knee and proposes', t: 17, from: 13, r: 105, pos: () => [2400, 650] },
-        { tier: 'medium', text: 'The pizza on the first table has become spaghetti', wx: 1450, r: 44, pos: () => [1388, 628] },
+        { tier: 'hard', text: 'The pizza on the first table has become spaghetti', wx: 1450, r: 44, pos: () => [1388, 628] },
         { tier: 'hard', text: 'The blue gin bottle behind the bar is green', wx: 3700, r: 50, pos: () => [3700, 300] },
         { tier: 'medium', text: 'The wine bottle on the last table is missing', wx: 3120, r: 52, pos: () => [3138, 606] },
         { tier: 'easy', text: 'The neon "Luna" bar sign is blue instead of pink', wx: 3880, r: 130, pos: () => [3880, 150] }
@@ -874,7 +876,7 @@
   Object.keys(SCENES).forEach(k => { all[k] = all[k] || blank(); });
   all.players = all.players || [];
   // new default difficulties: drop any old saved overrides once
-  if (all.tierVer !== 2) { Object.keys(SCENES).forEach(k => all[k].tiers = {}); all.tierVer = 2; }
+  if (all.tierVer !== 3) { Object.keys(SCENES).forEach(k => all[k].tiers = {}); all.tierVer = 3; }
   let sc = SCENES[all.scene] ? all.scene : 'shop';
   const S = () => SCENES[sc], st = () => all[sc];
   const tierOf = (i, k = sc) => all[k].tiers[i] || SCENES[k].diffs[i].tier;
@@ -886,7 +888,6 @@
     Object.keys(SCENES).forEach(k => SCENES[k].diffs.forEach((d, i) => {
       const f = all[k].found[i]; if (!f) return;
       (f.p || []).forEach(p => { if (p in out) out[p] += PTS[tierOf(i, k)]; });
-      if (f.first && f.first in out) out[f.first] += 1;
     }));
     return Object.entries(out).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   }
@@ -897,7 +898,7 @@
     $('intro').classList.toggle('hidden', p !== 'intro');
     $('gap').classList.toggle('hidden', p !== 'gap');
     $('strip').classList.toggle('hidden', p !== 'end' && p !== 'B');
-    $('strip').textContent = p === 'B' ? '💬 Spotted a difference? Type it in the chat now. First to call it gets ⚡ +1!' : '⏱ Time’s up! Last answers in the chat now.';
+    $('strip').textContent = p === 'B' ? '📝 Spotted a change? Jot it down. Keep it to yourself for now!' : '✋ Hands up to call out ONE difference at a time. No lists!';
     ui();
   }
   function play(v) { variant = v; t = 0; playing = true; setPhase(v === 'A' ? 'A' : 'B'); }
@@ -935,25 +936,21 @@
       const shown = !!st().revealed[i], f = st().found[i] || {}, tier = tierOf(i), got = f.p || [], open = shown && focus === i;
       const el = document.createElement('div'); el.className = 'diff' + (focus === i ? ' on' : '');
       el.innerHTML = `<div class="row"><span class="n">#${i + 1}</span><span class="chip ${tier}" title="Click to change the difficulty">${tier[0].toUpperCase() + tier.slice(1)} · ${PTS[tier]} pt${PTS[tier] > 1 ? 's' : ''}</span>
-        ${shown ? `<span class="cnt">✓ ${got.length}${f.first ? ' · ⚡' : ''}</span>` : '<button>Reveal</button>'}</div>
+        ${shown ? `<span class="cnt">${got.length ? '✓ ' + esc(got[0]) : 'not claimed'}</span>` : '<button>Reveal</button>'}</div>
         ${shown ? '<div class="txt"></div>' : ''}
-        ${open ? (all.players.length ? `<div class="pchips">${all.players.map(p => `<button class="pc ${got.includes(p) ? 'got' : ''}" data-p="${esc(p)}">${esc(p)}</button>`).join('')}</div>
-          <div class="firstsel">⚡ First: <select><option value="">nobody yet</option>${got.map(p => `<option ${f.first === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div>`
+        ${open ? (all.players.length ? `<div class="firstsel">Who called it?</div><div class="pchips">${all.players.map(p => `<button class="pc ${got.includes(p) ? 'got' : ''}" data-p="${esc(p)}">${esc(p)}</button>`).join('')}</div>`
           : '<div class="txt">Add players above to award points.</div>') : ''}`;
-      if (shown) el.querySelector('.txt').textContent = d.text + (open ? '' : '  (click to award points)');
+      if (shown) el.querySelector('.txt').textContent = d.text + (open || got.length ? '' : '  (click to award)');
       el.onclick = e => {
         if (e.target.classList.contains('chip')) { st().tiers[i] = TIERS[(TIERS.indexOf(tier) + 1) % 3]; save(); ui(); return; }
         if (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION') return;
         if (e.target.classList.contains('pc')) {
-          const p = e.target.dataset.p, list = got.includes(p) ? got.filter(x => x !== p) : got.concat(p);
-          st().found[i] = { p: list, first: list.includes(f.first) ? f.first : (list.length === 1 && !f.first ? list[0] : f.first || null) };
-          if (st().found[i].first && !list.includes(st().found[i].first)) st().found[i].first = null;
+          const p = e.target.dataset.p;
+          st().found[i] = { p: got.includes(p) ? [] : [p] };
           save(); ui(); return;
         }
         reveal(i);
       };
-      const sel = el.querySelector('select');
-      if (sel) sel.onchange = () => { st().found[i] = { p: got, first: sel.value || null }; save(); ui(); };
       list.appendChild(el);
     });
     $('revealAll').disabled = !S().diffs.some((_, i) => !st().revealed[i]);
@@ -1042,6 +1039,15 @@
     all.players = all.players.filter(x => x !== p); save(); ui(); renderBoard();
   };
   $('lbClear').onclick = () => { if (confirm('Remove all players and their scores?')) { all.players = []; Object.keys(SCENES).forEach(k => all[k].found = {}); save(); ui(); renderBoard(); } };
+  $('keyBtn').onclick = () => {
+    const w = window.open('', 'sd-answer-key', 'width=520,height=760');
+    if (!w) { alert('Your browser blocked the pop-up. Allow pop-ups for this site to see the answer key.'); return; }
+    const col = { easy: '#2AA845', medium: '#FF6E00', hard: '#C20D19' };
+    const body = Object.keys(SCENES).map(k => `<h2>${esc(SCENES[k].title)}</h2><ol>${SCENES[k].diffs.map((d, i) => `<li><span style="background:${col[tierOf(i, k)]}">${tierOf(i, k)} · ${PTS[tierOf(i, k)]}</span> ${esc(d.text)}</li>`).join('')}</ol>`).join('');
+    w.document.open();
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Answer key (host only)</title><style>body{font-family:Calibri,'Segoe UI',sans-serif;background:#0F1934;color:#fff;padding:6px 18px}h1{font-size:20px;color:#FF6E00}h2{font-size:18px;margin:16px 0 6px}li{margin:6px 0;font-size:16px}span{font-size:12px;font-weight:800;padding:2px 7px;border-radius:99px;margin-right:4px;text-transform:capitalize}p{color:#C5C4C2;font-size:14px}</style></head><body><h1>🔑 Answer key: host only</h1><p>The numbers match the list in the game. Keep this window off your Teams share.</p>${body}</body></html>`);
+    w.document.close();
+  };
   $('howBtn').onclick = () => $('how').classList.remove('hidden');
   $('howClose').onclick = () => $('how').classList.add('hidden');
   document.addEventListener('keydown', e => {
