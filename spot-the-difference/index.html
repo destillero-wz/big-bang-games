@@ -47,10 +47,26 @@
   .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; align-items: center; }
   .controls input[type=range] { width: 150px; accent-color: var(--accent); }
   .side { width: 300px; flex: none; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
-  .teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .team { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px; text-align: center; }
-  .team b { display: block; font-size: 34px; line-height: 1.1; }
-  .team.uk { border-top: 4px solid #4d7cff; } .team.co { border-top: 4px solid var(--yellow); }
+  .board { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; }
+  .board h3 { margin: 0 0 4px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+  .board h3 button { padding: 3px 9px; font-size: 13px; }
+  .board ol { margin: 0; padding-left: 22px; font-size: 15px; }
+  .board li { display: flex; justify-content: space-between; } .board li span { font-weight: 800; color: var(--yellow); }
+  .board .none { font-size: 14px; color: var(--muted); }
+  .addp { display: flex; gap: 6px; }
+  .addp input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+  .addp button { padding: 6px 12px; }
+  .pchips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .pchips button { padding: 3px 8px; font-size: 13px; background: var(--bg2); border: 1px solid var(--line); }
+  .pchips button.got { background: var(--good); border-color: var(--good); }
+  .firstsel { margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  .firstsel select { flex: 1; font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 6px; background: var(--bg); color: var(--text); border: 1px solid var(--line); }
+  .diff .cnt { font-size: 12px; color: var(--muted); }
+  .lb { list-style: none; padding: 0; margin: 0 0 16px; max-height: 60vh; overflow: auto; min-width: 380px; }
+  .lb li { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; font-size: 20px; }
+  .lb li:nth-child(odd) { background: rgba(255,255,255,0.05); }
+  .lb li .nm { flex: 1; } .lb li b { color: var(--yellow); }
+  .lb li button { padding: 2px 8px; font-size: 13px; background: transparent; color: var(--muted); }
   .legend { font-size: 13px; color: var(--muted); text-align: center; }
   .list { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
   .diff { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; cursor: pointer; }
@@ -107,11 +123,12 @@
       </div>
     </div>
     <div class="side">
-      <div class="teams">
-        <div class="team uk">UK<b id="ukScore">0</b></div>
-        <div class="team co">Colombia<b id="coScore">0</b></div>
+      <div class="board">
+        <h3>🏆 Top scores <button class="ghost" id="lbBtn">Full leaderboard</button></h3>
+        <ol id="top"></ol>
       </div>
-      <div class="legend">Easy 1 pt · Medium 2 pts · Hard 3 pts<br>Click a difficulty label to change it</div>
+      <div class="addp"><input id="pName" placeholder="Add players (e.g. Ana, Tom, Sofia)"><button id="pAdd">Add</button></div>
+      <div class="legend">Easy 1 · Medium 2 · Hard 3 · ⚡ first to spot it +1<br>Click a difficulty label to change it</div>
       <div class="list" id="list"></div>
       <div class="sidebtns"><button class="ghost" id="revealAll">👁 Reveal all</button></div>
     </div>
@@ -124,11 +141,20 @@
     <ol>
       <li>Watch the <b>original</b> scene for 30 seconds.</li>
       <li>Then watch it <b>again</b>. This time there are <b id="howN">7</b> differences. Some are there all the time, and some only happen for a moment.</li>
-      <li>When it ends, everyone types what they spotted in the <b>Teams chat</b>.</li>
-      <li>The host reveals each difference. Points go to every team that spotted it: <b>Easy 1</b>, <b>Medium 2</b>, <b>Hard 3</b>.</li>
+      <li>As soon as you spot a difference, <b>type it in the Teams chat</b>. Don't wait for the end!</li>
+      <li>The host reveals each difference. Everyone who spotted it scores: <b>Easy 1</b>, <b>Medium 2</b>, <b>Hard 3</b>. The <b>first person</b> to call it gets a <b>⚡ +1 bonus</b>.</li>
+      <li>Play both scenes. The leaderboard adds up your total.</li>
       <li>Use <b>⇄ Compare</b> to flick between the original and the changed scene, and the slider to scrub through.</li>
     </ol>
     <div style="text-align:center"><button id="howClose">Got it!</button></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="lbView">
+  <div class="panel">
+    <h2>🏆 Leaderboard</h2>
+    <ul class="lb" id="lbList"></ul>
+    <div style="display:flex;gap:8px;justify-content:center"><button class="ghost" id="lbClear">Remove all players</button><button id="lbClose">Close</button></div>
   </div>
 </div>
 
@@ -612,20 +638,33 @@
     get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
-  let all = store.get('bsd-state2') || { scene: 'shop' };
+  let all = store.get('bsd-state3') || { scene: 'shop', players: [] };
   const blank = () => ({ revealed: {}, found: {}, tiers: {} });
   Object.keys(SCENES).forEach(k => { all[k] = all[k] || blank(); });
+  all.players = all.players || [];
   let sc = SCENES[all.scene] ? all.scene : 'shop';
   const S = () => SCENES[sc], st = () => all[sc];
-  const tierOf = i => st().tiers[i] || S().diffs[i].tier;
-  const save = () => { all.scene = sc; store.set('bsd-state2', all); };
+  const tierOf = (i, k = sc) => all[k].tiers[i] || SCENES[k].diffs[i].tier;
+  const save = () => { all.scene = sc; store.set('bsd-state3', all); };
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  // found[i] = { p: [names who spotted it], first: name who called it first }
+  function scores() {
+    const out = {}; all.players.forEach(p => out[p] = 0);
+    Object.keys(SCENES).forEach(k => SCENES[k].diffs.forEach((d, i) => {
+      const f = all[k].found[i]; if (!f) return;
+      (f.p || []).forEach(p => { if (p in out) out[p] += PTS[tierOf(i, k)]; });
+      if (f.first && f.first in out) out[f.first] += 1;
+    }));
+    return Object.entries(out).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }
   let phase = 'intro', t = 0, playing = false, variant = 'A', focus = null, gapT = 0;
 
   function setPhase(p) {
     phase = p;
     $('intro').classList.toggle('hidden', p !== 'intro');
     $('gap').classList.toggle('hidden', p !== 'gap');
-    $('strip').classList.toggle('hidden', p !== 'end');
+    $('strip').classList.toggle('hidden', p !== 'end' && p !== 'B');
+    $('strip').textContent = p === 'B' ? '💬 Spotted a difference? Type it in the chat now. First to call it gets ⚡ +1!' : '⏱ Time’s up! Last answers in the chat now.';
     ui();
   }
   function play(v) { variant = v; t = 0; playing = true; setPhase(v === 'A' ? 'A' : 'B'); }
@@ -647,29 +686,41 @@
     $('cmpBtn').disabled = !review;
     $('cmpBtn').textContent = variant === 'A' ? '⇄ Show changed' : '⇄ Show original';
     $('scrub').disabled = !review;
-    let uk = 0, co = 0;
-    S().diffs.forEach((d, i) => { const f = st().found[i] || {}; if (f.uk) uk += PTS[tierOf(i)]; if (f.co) co += PTS[tierOf(i)]; });
-    $('ukScore').textContent = uk; $('coScore').textContent = co;
+    const sc5 = scores(), medal = ['🥇', '🥈', '🥉'];
+    $('top').innerHTML = sc5.length ? sc5.slice(0, 5).map(([p, s], n) => `<li>${medal[n] || ''} ${esc(p)} <span>${s}</span></li>`).join('') : '<div class="none">Add players below to keep score.</div>';
     renderList();
+    if (!$('lbView').classList.contains('hidden')) renderBoard();
+  }
+  function renderBoard() {
+    const medal = ['🥇', '🥈', '🥉'];
+    $('lbList').innerHTML = scores().map(([p, s], n) => `<li><span>${medal[n] || (n + 1) + '.'}</span><span class="nm">${esc(p)}</span><b>${s}</b><button data-p="${esc(p)}" title="Remove player">✕</button></li>`).join('') || '<li>No players yet.</li>';
   }
 
   function renderList() {
     const list = $('list'); list.innerHTML = '';
     S().diffs.forEach((d, i) => {
-      const shown = !!st().revealed[i], f = st().found[i] || {}, tier = tierOf(i);
+      const shown = !!st().revealed[i], f = st().found[i] || {}, tier = tierOf(i), got = f.p || [], open = shown && focus === i;
       const el = document.createElement('div'); el.className = 'diff' + (focus === i ? ' on' : '');
       el.innerHTML = `<div class="row"><span class="n">#${i + 1}</span><span class="chip ${tier}" title="Click to change the difficulty">${tier[0].toUpperCase() + tier.slice(1)} · ${PTS[tier]} pt${PTS[tier] > 1 ? 's' : ''}</span>
-        ${shown ? `<button class="t uk ${f.uk ? 'got' : ''}" title="UK spotted it">UK</button><button class="t co ${f.co ? 'got' : ''}" title="Colombia spotted it">COL</button>` : '<button>Reveal</button>'}</div>
-        ${shown ? '<div class="txt"></div>' : ''}`;
-      if (shown) el.querySelector('.txt').textContent = d.text;
+        ${shown ? `<span class="cnt">✓ ${got.length}${f.first ? ' · ⚡' : ''}</span>` : '<button>Reveal</button>'}</div>
+        ${shown ? '<div class="txt"></div>' : ''}
+        ${open ? (all.players.length ? `<div class="pchips">${all.players.map(p => `<button class="pc ${got.includes(p) ? 'got' : ''}" data-p="${esc(p)}">${esc(p)}</button>`).join('')}</div>
+          <div class="firstsel">⚡ First: <select><option value="">nobody yet</option>${got.map(p => `<option ${f.first === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div>`
+          : '<div class="txt">Add players above to award points.</div>') : ''}`;
+      if (shown) el.querySelector('.txt').textContent = d.text + (open ? '' : '  (click to award points)');
       el.onclick = e => {
         if (e.target.classList.contains('chip')) { st().tiers[i] = TIERS[(TIERS.indexOf(tier) + 1) % 3]; save(); ui(); return; }
-        if (e.target.classList.contains('t')) {
-          const k = e.target.classList.contains('uk') ? 'uk' : 'co';
-          st().found[i] = Object.assign({}, st().found[i], { [k]: !f[k] }); save(); ui(); return;
+        if (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION') return;
+        if (e.target.classList.contains('pc')) {
+          const p = e.target.dataset.p, list = got.includes(p) ? got.filter(x => x !== p) : got.concat(p);
+          st().found[i] = { p: list, first: list.includes(f.first) ? f.first : (list.length === 1 && !f.first ? list[0] : f.first || null) };
+          if (st().found[i].first && !list.includes(st().found[i].first)) st().found[i].first = null;
+          save(); ui(); return;
         }
         reveal(i);
       };
+      const sel = el.querySelector('select');
+      if (sel) sel.onchange = () => { st().found[i] = { p: got, first: sel.value || null }; save(); ui(); };
       list.appendChild(el);
     });
     $('revealAll').disabled = !S().diffs.some((_, i) => !st().revealed[i]);
@@ -744,10 +795,25 @@
     if (!confirm('Start a new game for this scene? This hides the differences and clears the scores.')) return;
     const tiers = st().tiers; all[sc] = blank(); all[sc].tiers = tiers; save(); focus = null; playing = false; variant = 'A'; t = 0; setPhase('intro');
   };
+  function addPlayers() {
+    $('pName').value.split(',').map(s => s.trim()).filter(Boolean).forEach(p => { if (!all.players.includes(p)) all.players.push(p); });
+    $('pName').value = ''; save(); ui();
+  }
+  $('pAdd').onclick = addPlayers;
+  $('pName').addEventListener('keydown', e => { if (e.key === 'Enter') addPlayers(); });
+  $('lbBtn').onclick = () => { $('lbView').classList.remove('hidden'); renderBoard(); };
+  $('lbClose').onclick = () => $('lbView').classList.add('hidden');
+  $('lbList').onclick = e => {
+    const p = e.target.dataset && e.target.dataset.p; if (!p) return;
+    if (!confirm(`Remove ${p} from the game?`)) return;
+    all.players = all.players.filter(x => x !== p); save(); ui(); renderBoard();
+  };
+  $('lbClear').onclick = () => { if (confirm('Remove all players and their scores?')) { all.players = []; Object.keys(SCENES).forEach(k => all[k].found = {}); save(); ui(); renderBoard(); } };
   $('howBtn').onclick = () => $('how').classList.remove('hidden');
   $('howClose').onclick = () => $('how').classList.add('hidden');
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { $('how').classList.add('hidden'); return; }
+    if (e.key === 'Escape') { $('how').classList.add('hidden'); $('lbView').classList.add('hidden'); return; }
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
     if (e.key === ' ' && !$('playBtn').disabled) { e.preventDefault(); $('playBtn').click(); }
     if ((e.key === 'c' || e.key === 'C') && !$('cmpBtn').disabled) $('cmpBtn').click();
   });
