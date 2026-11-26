@@ -597,11 +597,11 @@
       draw: shopScene,
       diffs: [
         { tier: 'easy', text: 'The hanging sale sign says 40% off instead of 50% off', t: 5, r: 112, pos: () => [1420, 200] },
-        { tier: 'hard', text: 'A dog trots past outside the window (about halfway through)', t: 19, from: 16, to: 24, r: 58, pos: t => [600 - (t - 16) * 80, 432] },
-        { tier: 'medium', text: 'The clock is an hour ahead', t: 8, r: 64, pos: () => [645, 200] },
+        { tier: 'medium', text: 'A dog trots past outside the window (about halfway through)', t: 19, from: 16, to: 24, r: 58, pos: t => [600 - (t - 16) * 80, 432] },
+        { tier: 'hard', text: 'The clock is an hour ahead', t: 8, r: 64, pos: () => [645, 200] },
         { tier: 'easy', text: "The walking shopper's bag is green instead of red", t: 10, from: 2, to: 26, r: 62, pos: t => [-150 + t * 68 + 8, 735] },
-        { tier: 'hard', text: 'The TV price tag says £249 instead of £299', t: 5, r: 56, pos: () => [833, 324] },
-        { tier: 'medium', text: 'The teddy bear vanishes from the shelf partway through', t: 20, from: 13, r: 62, pos: () => [1040, 372] },
+        { tier: 'medium', text: 'The TV price tag says £249 instead of £299', t: 5, r: 56, pos: () => [833, 324] },
+        { tier: 'hard', text: 'The teddy bear vanishes from the shelf partway through', t: 20, from: 13, r: 62, pos: () => [1040, 372] },
         { tier: 'easy', text: 'The green balloon is missing', t: 5, r: 52, pos: () => [1345, 482] }
       ]
     },
@@ -613,12 +613,12 @@
       diffs: [
         { tier: 'easy', text: 'The big colour-block painting has changed from red and orange to blue and teal', wx: 1760, r: 215, pos: () => [1760, 375] },
         { tier: 'medium', text: 'The woman by the first painting holds a phone instead of a glass of wine', wx: 1260, r: 52, pos: () => [1260, 505] },
-        { tier: 'easy', text: 'The yellow raincoat is missing from the coat rack', wx: 600, r: 80, pos: () => [366, 445] },
+        { tier: 'medium', text: 'The yellow raincoat is missing from the coat rack', wx: 600, r: 80, pos: () => [366, 445] },
         { tier: 'hard', text: 'The waiter has 2 glasses on the tray instead of 3', r: 52, pos: t => [1300 + t * 60 + 56, 632] },
-        { tier: 'medium', text: 'The big red block in the first painting is blue', wx: 1050, r: 105, pos: () => [1035, 285] },
-        { tier: 'hard', text: 'The small painting is hanging crooked', wx: 2180, r: 112, pos: () => [2180, 335] },
+        { tier: 'easy', text: 'The big red block in the first painting is blue', wx: 1050, r: 105, pos: () => [1035, 285] },
+        { tier: 'easy', text: 'The small painting is hanging crooked', wx: 2180, r: 112, pos: () => [2180, 335] },
         { tier: 'medium', text: 'The man on the bench is reading a booklet', wx: 1800, r: 62, pos: () => [1815, 630] },
-        { tier: 'easy', text: "The woman's scarf is yellow instead of red", wx: 3530, r: 56, pos: () => [3530, 520] }
+        { tier: 'hard', text: "The woman's scarf is yellow instead of red", wx: 3530, r: 56, pos: () => [3530, 520] }
       ]
     }
   };
@@ -642,6 +642,8 @@
   const blank = () => ({ revealed: {}, found: {}, tiers: {} });
   Object.keys(SCENES).forEach(k => { all[k] = all[k] || blank(); });
   all.players = all.players || [];
+  // new default difficulties: drop any old saved overrides once
+  if (all.tierVer !== 2) { Object.keys(SCENES).forEach(k => all[k].tiers = {}); all.tierVer = 2; }
   let sc = SCENES[all.scene] ? all.scene : 'shop';
   const S = () => SCENES[sc], st = () => all[sc];
   const tierOf = (i, k = sc) => all[k].tiers[i] || SCENES[k].diffs[i].tier;
