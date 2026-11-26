@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spot the Difference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0F1934; --bg2: #1B2957; --panel: #16224a; --line: #2c3c75; --text: #ffffff; --muted: #C5C4C2;
+          --accent: #FF6E00; --good: #2AA845; --bad: #C20D19; --yellow: #F9DD28; --blue: #003BF2; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+               font-family: Calibri, Carlito, 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+  button { font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 8px 14px; background: var(--accent);
+           color: #fff; cursor: pointer; }
+  button.ghost { background: var(--bg2); border: 1px solid var(--line); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .app { display: flex; flex-direction: column; height: 100vh; padding: 10px 14px; gap: 8px; }
+  .top { display: flex; align-items: center; gap: 8px; }
+  .top h1 { font-size: 24px; margin: 0; flex: 1; white-space: nowrap; }
+  .top h1 span { color: var(--accent); }
+  .main { flex: 1; display: flex; gap: 12px; min-height: 0; }
+  .stage { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; align-items: center; }
+  .screen { position: relative; width: min(100%, calc((100vh - 140px) * 16 / 9)); aspect-ratio: 16 / 9;
+            border-radius: 14px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.45); background: #000; flex: none; }
+  canvas { width: 100%; height: 100%; display: block; }
+  .tag { position: absolute; top: 12px; left: 12px; padding: 5px 14px; border-radius: 999px; font-weight: 800;
+         font-size: 20px; background: rgba(7,15,37,0.85); border: 2px solid var(--good); }
+  .tag.b { border-color: var(--accent); }
+  .clock { position: absolute; top: 12px; right: 12px; padding: 5px 14px; border-radius: 999px; font-weight: 800;
+           font-size: 20px; background: rgba(7,15,37,0.85); font-variant-numeric: tabular-nums; }
+  .cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+           gap: 14px; text-align: center; background: rgba(7,15,37,0.86); padding: 30px; }
+  .cover h2 { margin: 0; font-size: 46px; }
+  .cover p { margin: 0; font-size: 22px; color: var(--muted); max-width: 760px; }
+  .cover .big { font-size: 120px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .cover button { font-size: 22px; padding: 12px 28px; }
+  .strip { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 16px; text-align: center; font-size: 22px;
+           font-weight: 800; background: rgba(7,15,37,0.88); }
+  .hidden { display: none !important; }
+  .bar { width: min(100%, calc((100vh - 140px) * 16 / 9)); height: 8px; background: var(--bg2); border-radius: 99px; overflow: hidden; flex: none; }
+  .bar div { height: 100%; width: 0; background: var(--accent); }
+  .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .controls input[type=range] { width: 160px; accent-color: var(--accent); }
+  .side { width: 300px; flex: none; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .team { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px; text-align: center; }
+  .team b { display: block; font-size: 34px; line-height: 1.1; }
+  .team.uk { border-top: 4px solid #4d7cff; } .team.co { border-top: 4px solid var(--yellow); }
+  .legend { font-size: 14px; color: var(--muted); text-align: center; }
+  .list { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+  .diff { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; cursor: pointer; }
+  .diff.on { border-color: var(--yellow); }
+  .diff .row { display: flex; align-items: center; gap: 6px; }
+  .diff .n { font-weight: 800; flex: 1; }
+  .chip { font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 99px; }
+  .chip.easy { background: var(--good); } .chip.medium { background: var(--accent); } .chip.hard { background: var(--bad); }
+  .diff .txt { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .diff button { padding: 3px 9px; font-size: 13px; }
+  .diff button.t { background: var(--bg2); border: 1px solid var(--line); }
+  .diff button.t.uk.got { background: #4d7cff; } .diff button.t.co.got { background: var(--yellow); color: #070f25; }
+  .sidebtns { display: flex; gap: 6px; } .sidebtns button { flex: 1; }
+  .overlay { position: fixed; inset: 0; background: rgba(7,15,37,0.8); display: flex; align-items: center; justify-content: center; z-index: 10; }
+  .panel { background: var(--bg2); border-radius: 16px; padding: 22px 28px; max-width: 640px; }
+  .panel h2 { margin-top: 0; } .panel li { margin: 7px 0; font-size: 18px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <h1>🔍 Spot the Difference: <span>Black Friday</span></h1>
+    <button class="ghost" id="howBtn">❓ How to play</button>
+    <button class="ghost" id="newBtn">↺ New game</button>
+  </div>
+  <div class="main">
+    <div class="stage">
+      <div class="screen">
+        <canvas id="cv" width="1600" height="900"></canvas>
+        <div class="tag" id="tag">ORIGINAL</div>
+        <div class="clock" id="clock">0:30</div>
+        <div class="strip hidden" id="strip">⏱ Time's up! What changed? Type your answers in the chat.</div>
+        <div class="cover" id="intro">
+          <h2>🛍️ Spot the Difference</h2>
+          <p>Watch our Black Friday shop for 30 seconds. Then watch it again: this time, some sneaky things have changed. How many can you spot?</p>
+          <button id="startBtn">▶ Start the original</button>
+        </div>
+        <div class="cover hidden" id="gap">
+          <h2>Now watch it again… 👀</h2>
+          <p>What's changed? Some changes are there all the time, and some only happen for a moment.</p>
+          <div class="big" id="gapN">3</div>
+        </div>
+      </div>
+      <div class="bar"><div id="bar"></div></div>
+      <div class="controls">
+        <button class="ghost" id="playBtn">⏸ Pause</button>
+        <button class="ghost" id="skipBtn">⏭ Skip</button>
+        <button class="ghost" id="againBtn">🔁 Play both again</button>
+        <button class="ghost" id="watchA">▶ Original</button>
+        <button class="ghost" id="watchB">▶ Changed</button>
+        <button id="cmpBtn">⇄ Compare</button>
+        <input type="range" id="scrub" min="0" max="30" step="0.1" value="0" title="Scrub through the scene">
+      </div>
+    </div>
+    <div class="side">
+      <div class="teams">
+        <div class="team uk">UK<b id="ukScore">0</b></div>
+        <div class="team co">Colombia<b id="coScore">0</b></div>
+      </div>
+      <div class="legend">Easy 1 pt · Medium 2 pts · Hard 3 pts</div>
+      <div class="list" id="list"></div>
+      <div class="sidebtns"><button class="ghost" id="revealAll">👁 Reveal all</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="how">
+  <div class="panel">
+    <h2>🔍 How to play</h2>
+    <ol>
+      <li>Watch the <b>original</b> Black Friday shop scene for 30 seconds.</li>
+      <li>Then watch it <b>again</b>. This time there are <b>7 differences</b>. Some are there all the time, and some only happen for a moment.</li>
+      <li>When it ends, everyone types what they spotted in the <b>Teams chat</b>.</li>
+      <li>The host reveals each difference. Points go to every team that spotted it: <b>Easy 1</b>, <b>Medium 2</b>, <b>Hard 3</b>.</li>
+      <li>Use <b>⇄ Compare</b> to flick between the original and the changed scene, and the slider to scrub through.</li>
+    </ol>
+    <div style="text-align:center"><button id="howClose">Got it!</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  const W = 1600, H = 900, DUR = 30, GAP = 4;
+  const C = { navy: '#1B2957', orange: '#FF6E00', blue: '#003BF2', yellow: '#F9DD28', green: '#2AA845', red: '#C20D19', ink: '#070f25', skin1: '#E0AC69', skin2: '#8D5524', skin3: '#F1C27D' };
+  const FONT = 'Calibri, Carlito, "Segoe UI", sans-serif';
+
+  // ---------- drawing helpers ----------
+  function R(x, y, w, h, r, f) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = f; ctx.fill(); }
+  function Ci(x, y, r, f) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = f; ctx.fill(); }
+  function Ln(x1, y1, x2, y2, c, w) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke(); }
+  function Tx(s, x, y, size, f, weight = 800) { ctx.font = `${weight} ${size}px ${FONT}`; ctx.fillStyle = f; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y); }
+
+  // ---------- the scene ----------
+  function scene(t, B) {
+    // wall and floor
+    ctx.fillStyle = '#FFF1DE'; ctx.fillRect(0, 0, W, 620);
+    ctx.fillStyle = 'rgba(255,110,0,0.05)'; for (let x = 0; x < W; x += 80) ctx.fillRect(x, 0, 40, 620);
+    ctx.fillStyle = '#C99A6B'; ctx.fillRect(0, 620, W, 280);
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 3;
+    for (let y = 665; y < H; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.fillStyle = '#8B5E3C'; ctx.fillRect(0, 610, W, 14);
+
+    windowView(t, B);
+    garland(t);
+    R(720, 48, 520, 78, 12, C.navy); Tx('BLACK FRIDAY SALE', 980, 88, 50, C.yellow);
+    wallClock(t, B);
+    shelves(t, B);
+    burst(t, B);
+    cashier(t);
+    counter();
+    balloons(t, B);
+    floorSign();
+    // shoppers, back to front
+    person(1000, 660 + Math.sin(t * 2) * 2, { s: 0.85, dir: Math.sin(t * 0.5) > 0.6 ? -1 : 1, shirt: C.yellow, pants: C.navy, skin: C.skin2, hair: '#1a1a1a' }, t);
+    const s1 = -120 + t * 66;
+    person(s1, 830, { dir: 1, walk: t * 7, shirt: C.blue, pants: '#333', skin: C.skin3, hair: '#6b3e1f', bag: B ? C.green : C.red }, t);
+    person(1480 - t * 48, 875, { dir: -1, walk: t * 6, shirt: C.orange, pants: C.navy, skin: C.skin1, hair: '#2b2b2b', cart: true }, t);
+  }
+
+  function windowView(t, B) {
+    const x = 60, y = 130, w = 500, h = 340;
+    R(x - 16, y - 16, w + 32, h + 32, 10, '#8B5E3C');
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, '#8EC9FF'); g.addColorStop(1, '#DDF0FF');
+    ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    const cx = x - 100 + ((t * 12) % (w + 200));
+    Ci(cx, y + 50, 22, '#fff'); Ci(cx + 25, y + 42, 28, '#fff'); Ci(cx + 52, y + 52, 20, '#fff');
+    [[0, 120, '#6b7aa8'], [85, 170, '#53618f'], [170, 100, '#7d8bb8'], [255, 190, '#4a577f'], [340, 130, '#6b7aa8'], [425, 160, '#55638f']].forEach(([bx, bh, c]) => {
+      R(x + bx, 380 - bh, 80, bh, 2, c);
+      for (let wy = 380 - bh + 14; wy < 370; wy += 26) for (let wx = 12; wx < 70; wx += 22) R(x + bx + wx, wy, 12, 14, 2, 'rgba(249,221,40,0.75)');
+    });
+    ctx.fillStyle = '#555'; ctx.fillRect(x, 380, w, 42);
+    for (let dx = 0; dx < w; dx += 50) R(x + dx + 10, 399, 26, 4, 2, '#eee');
+    ctx.fillStyle = '#c4c4c4'; ctx.fillRect(x, 422, w, 50);
+    // passing car
+    const carX = x - 170 + ((t * 110) % (w + 340));
+    R(carX + 30, 360, 74, 28, 9, C.red); R(carX + 40, 366, 24, 16, 3, '#cfe8ff'); R(carX + 70, 366, 24, 16, 3, '#cfe8ff');
+    R(carX, 382, 140, 28, 10, C.red); Ci(carX + 30, 410, 12, '#222'); Ci(carX + 110, 410, 12, '#222');
+    // a pedestrian outside (both versions)
+    if (t > 2 && t < 13) person(x - 40 + (t - 2) * 55, 466, { s: 0.38, dir: 1, walk: t * 8, shirt: C.orange, pants: '#333', skin: C.skin1, hair: '#333' }, t);
+    // DIFFERENCE (hard): a dog walks past, only in the changed version
+    if (B && t > 16 && t < 24) dog(600 - (t - 16) * 80, 468, t);
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath(); ctx.moveTo(x + 40, y); ctx.lineTo(x + 110, y); ctx.lineTo(x, y + 110); ctx.lineTo(x, y + 40); ctx.fill();
+    ctx.restore();
+    Ln(x + w / 2, y, x + w / 2, y + h, '#8B5E3C', 10); Ln(x, y + 150, x + w, y + 150, '#8B5E3C', 10);
+    R(x - 26, y + h + 12, w + 52, 14, 4, '#6e4a2e');
+  }
+
+  function dog(x, fy, t) {
+    const s = Math.sin(t * 12);
+    ctx.save(); ctx.translate(x, fy); ctx.scale(1.4, 1.4);
+    [[-14, 1], [-6, -1], [12, 1], [20, -1]].forEach(([lx, p]) => Ln(lx, -14, lx + s * 5 * p, 0, '#6b4423', 5));
+    ctx.beginPath(); ctx.ellipse(3, -20, 22, 10, 0, 0, Math.PI * 2); ctx.fillStyle = '#8B5A2B'; ctx.fill();
+    Ci(-20, -30, 10, '#8B5A2B');
+    ctx.beginPath(); ctx.ellipse(-15, -35, 4, 8, 0.4, 0, Math.PI * 2); ctx.fillStyle = '#5a3a1c'; ctx.fill();
+    Ci(-29, -28, 3, '#111'); Ci(-22, -33, 1.8, '#111');
+    Ln(24, -24, 33, -33 + s * 4, '#8B5A2B', 4);
+    ctx.restore();
+  }
+
+  function garland(t) {
+    Ln(0, 20, W, 20, '#2b2b2b', 2);
+    const cols = [C.orange, C.blue, C.yellow, C.green, C.red];
+    for (let i = 0, x = 20; x < W; i++, x += 55) {
+      const yy = 22 + Math.sin(x / 60) * 6;
+      Ci(x, yy + 8, 8, cols[(i + Math.floor(t * 2)) % cols.length]);
+    }
+  }
+
+  function wallClock(t, B) {
+    const cx = 645, cy = 200;
+    Ci(cx, cy, 52, C.navy); Ci(cx, cy, 44, '#fff');
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; Ln(cx + Math.cos(a) * 36, cy + Math.sin(a) * 36, cx + Math.cos(a) * 41, cy + Math.sin(a) * 41, C.navy, k % 3 ? 2 : 4); }
+    // DIFFERENCE (medium): the changed clock is an hour ahead
+    const mins = (B ? 11 * 60 + 10 : 10 * 60 + 10) + t;
+    const ma = (mins % 60) / 60 * Math.PI * 2 - Math.PI / 2, ha = ((mins / 60) % 12) / 12 * Math.PI * 2 - Math.PI / 2;
+    Ln(cx, cy, cx + Math.cos(ha) * 24, cy + Math.sin(ha) * 24, C.ink, 7);
+    Ln(cx, cy, cx + Math.cos(ma) * 37, cy + Math.sin(ma) * 37, C.ink, 4);
+    Ci(cx, cy, 5, C.orange);
+  }
+
+  function shelves(t, B) {
+    R(710, 150, 560, 462, 8, '#8B5E3C'); R(724, 164, 532, 440, 4, '#EADBC8');
+    [290, 420, 550].forEach(y => R(716, y, 548, 14, 3, '#6e4a2e'));
+    // top shelf: TV, gifts, headphones, console
+    R(745, 180, 170, 100, 6, '#222');
+    ctx.fillStyle = `hsl(${(t * 40) % 360},70%,55%)`; ctx.fillRect(755, 189, 150, 82);
+    R(815, 280, 30, 10, 2, '#333');
+    // DIFFERENCE (hard): TV price tag £299 vs £249
+    R(788, 306, 90, 38, 6, '#fff'); ctx.strokeStyle = C.red; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(788, 306, 90, 38, 6); ctx.stroke();
+    Tx(B ? '£249' : '£299', 833, 326, 27, C.red);
+    R(940, 220, 62, 70, 4, C.orange); R(966, 220, 10, 70, 0, C.yellow); R(940, 249, 62, 10, 0, C.yellow);
+    R(1010, 245, 46, 45, 4, C.blue); R(1028, 245, 9, 45, 0, '#fff');
+    ctx.beginPath(); ctx.arc(1108, 262, 26, Math.PI, 0); ctx.strokeStyle = '#333'; ctx.lineWidth = 7; ctx.stroke();
+    R(1076, 256, 16, 30, 6, C.red); R(1124, 256, 16, 30, 6, C.red);
+    R(1160, 198, 84, 92, 6, C.navy); Tx('GAME', 1202, 230, 22, '#fff'); R(1176, 252, 52, 26, 8, '#4d7cff');
+    // middle shelf: plant, trainers, teddy, boxes
+    R(770, 380, 44, 40, 4, '#b5651d');
+    [[-0.7, '#2e8b57'], [0, '#3cb371'], [0.7, '#2e8b57']].forEach(([a, c]) => { ctx.save(); ctx.translate(792, 382); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(0, -18, 9, 20, 0, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); ctx.restore(); });
+    [[860, C.red], [920, C.red]].forEach(([sx, c]) => { R(sx, 396, 52, 24, 10, c); R(sx, 412, 56, 8, 3, '#fff'); });
+    // DIFFERENCE (medium): the teddy vanishes partway through the changed version
+    if (!B || t < 13) {
+      Ci(1040, 393, 27, '#a0522d'); Ci(1040, 352, 22, '#a0522d');
+      Ci(1024, 334, 9, '#a0522d'); Ci(1056, 334, 9, '#a0522d');
+      Ci(1040, 358, 9, '#deb887'); Ci(1033, 348, 3, '#111'); Ci(1047, 348, 3, '#111'); Ci(1040, 355, 3, '#111');
+      Ci(1040, 398, 14, '#deb887');
+    }
+    R(1110, 360, 60, 60, 4, C.green); R(1175, 375, 70, 45, 4, C.yellow); R(1185, 338, 50, 37, 4, C.orange);
+    // bottom shelf: tins, books, balls, shoebox
+    for (let k = 0; k < 4; k++) R(745 + k * 34, 510, 30, 40, 4, k % 2 ? '#c0392b' : '#e67e22');
+    for (let k = 0; k < 3; k++) R(762 + k * 34, 470, 30, 40, 4, k % 2 ? '#e67e22' : '#c0392b');
+    ['#003BF2', '#2AA845', '#C20D19', '#F9DD28', '#1B2957', '#FF6E00'].forEach((c, k) => R(900 + k * 18, 470 + (k % 2) * 8, 16, 80 - (k % 2) * 8, 2, c));
+    Ci(1050, 525, 25, C.yellow); Ci(1102, 528, 22, C.blue); Ci(1076, 500, 18, C.red);
+    R(1140, 498, 105, 52, 4, '#333'); R(1140, 498, 105, 12, 2, '#555');
+  }
+
+  function burst(t, B) {
+    const cx = 1420, cy = 200, sc = 1 + Math.sin(t * 3) * 0.04;
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc);
+    ctx.save(); ctx.rotate(t * 0.25); ctx.beginPath();
+    for (let k = 0; k < 36; k++) { const r = k % 2 ? 80 : 100, a = k / 36 * Math.PI * 2; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+    ctx.closePath(); ctx.fillStyle = C.red; ctx.fill(); ctx.restore();
+    // DIFFERENCE (easy): 50% vs 40%
+    Tx(B ? '40%' : '50%', 0, -12, 62, '#fff'); Tx('OFF', 0, 38, 32, C.yellow);
+    ctx.restore();
+  }
+
+  function cashier(t) {
+    const wave = Math.max(0, Math.sin(t * Math.PI / 4)) ** 4;
+    R(1440, 470, 64, 150, 18, C.blue);
+    const a = -0.4 - wave * 1.6 + Math.sin(t * 14) * 0.25 * wave;
+    Ln(1500, 490, 1500 + Math.cos(a) * 50, 490 + Math.sin(a) * 50 + 30, C.skin1, 11);
+    Ci(1472, 440, 26, C.skin1); R(1446, 410, 52, 16, 7, C.orange); R(1492, 418, 20, 6, 3, C.orange);
+    Ci(1464, 440, 3, '#111'); Ci(1482, 440, 3, '#111');
+    ctx.beginPath(); ctx.arc(1473, 449, 7, 0.1 * Math.PI, 0.9 * Math.PI); ctx.strokeStyle = '#111'; ctx.lineWidth = 2; ctx.stroke();
+  }
+
+  function counter() {
+    R(1320, 540, 100, 58, 8, '#555'); R(1332, 548, 60, 24, 4, '#9fe6c6'); Tx('£', 1362, 560, 18, '#1d5a3c');
+    R(1285, 595, 310, 22, 6, '#2b3a6b'); R(1295, 612, 290, 200, 8, C.navy);
+    R(1295, 660, 290, 16, 0, C.orange); Tx('PAY HERE', 1440, 735, 30, '#fff');
+  }
+
+  function balloons(t, B) {
+    const list = [[1305, 430, C.red], [1350, 388, C.blue], [1395, 440, C.yellow], [1345, 482, C.green]];
+    list.forEach(([bx, by, c], k) => {
+      // DIFFERENCE (easy): the green balloon is missing
+      if (B && k === 3) return;
+      const yy = by + Math.sin(t * 1.5 + k) * 6;
+      ctx.beginPath(); ctx.moveTo(bx, yy + 36); ctx.quadraticCurveTo(bx + 6, yy + 90, 1300, 596);
+      ctx.strokeStyle = '#555'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(bx, yy, 28, 34, 0, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill();
+      Ci(bx - 9, yy - 12, 6, 'rgba(255,255,255,0.45)');
+    });
+  }
+
+  function floorSign() {
+    ctx.beginPath(); ctx.moveTo(610, 790); ctx.lineTo(655, 640); ctx.lineTo(700, 790); ctx.strokeStyle = '#6e4a2e'; ctx.lineWidth = 8; ctx.stroke();
+    R(602, 650, 106, 110, 8, '#fff'); ctx.strokeStyle = C.red; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(602, 650, 106, 110, 8); ctx.stroke();
+    Tx('SALE', 655, 688, 34, C.red); Tx('TODAY', 655, 728, 22, C.navy);
+  }
+
+  function person(x, fy, o, t) {
+    const s = o.s || 1;
+    ctx.save(); ctx.translate(x, fy); ctx.scale((o.dir || 1) * s, s);
+    ctx.beginPath(); ctx.ellipse(o.cart ? 50 : 0, 0, o.cart ? 110 : 40, 9, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fill();
+    const sw = o.walk != null ? Math.sin(o.walk) * 22 : 0;
+    Ln(-8, -75, -8 + sw, -6, o.pants, 15); Ln(8, -75, 8 - sw, -6, o.pants, 15);
+    R(-8 + sw - 8, -10, 24, 10, 4, '#222'); R(8 - sw - 8, -10, 24, 10, 4, '#222');
+    if (o.cart) {
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(58, -122); ctx.lineTo(66, -58); ctx.lineTo(166, -58); ctx.lineTo(174, -122); ctx.closePath(); ctx.stroke();
+      for (let k = 1; k < 5; k++) Ln(58 + k * 23, -120, 66 + k * 20, -60, '#aaa', 2);
+      R(80, -150, 44, 32, 4, C.yellow); R(122, -160, 44, 42, 4, C.green);
+      Ln(70, -58, 80, -14, '#888', 4); Ln(160, -58, 152, -14, '#888', 4);
+      Ci(80, -10, 9, '#333'); Ci(152, -10, 9, '#333');
+      Ln(30, -138, 58, -122, '#888', 5);
+    }
+    R(-28, -162, 56, 94, 18, o.shirt);
+    if (o.bag) {
+      Ln(18, -146, 34, -96, o.skin, 11);
+      ctx.beginPath(); ctx.arc(37, -92, 12, Math.PI, 0); ctx.strokeStyle = '#333'; ctx.lineWidth = 3; ctx.stroke();
+      R(14, -92, 48, 54, 6, o.bag); R(14, -92, 48, 8, 3, 'rgba(0,0,0,0.15)');
+    } else if (o.cart) {
+      Ln(16, -146, 34, -136, o.skin, 11);
+    } else {
+      Ln(18, -146, 22 - sw * 0.4, -90, o.skin, 11);
+    }
+    Ci(0, -186, 26, o.skin);
+    ctx.beginPath(); ctx.arc(0, -192, 27, Math.PI * 1.02, Math.PI * 1.98); ctx.fillStyle = o.hair; ctx.fill();
+    Ci(12, -188, 3, '#111');
+    ctx.beginPath(); ctx.arc(10, -178, 6, 0.1 * Math.PI, 0.8 * Math.PI); ctx.strokeStyle = '#111'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- the differences ----------
+  const DIFFS = [
+    { tier: 'easy',   text: 'The big sale sticker says 40% off instead of 50% off', t: 5,  from: 0,  to: 30, r: 118, pos: () => [1420, 200] },
+    { tier: 'hard',   text: 'A dog trots past outside the window (about halfway through)', t: 19, from: 16, to: 24, r: 62, pos: t => [600 - (t - 16) * 80, 432] },
+    { tier: 'medium', text: 'The clock is an hour ahead', t: 8, from: 0, to: 30, r: 66, pos: () => [645, 200] },
+    { tier: 'easy',   text: "The walking shopper's bag is green instead of red", t: 10, from: 2, to: 26, r: 62, pos: t => [-120 + t * 66 + 38, 765] },
+    { tier: 'hard',   text: 'The TV price tag says £249 instead of £299', t: 5, from: 0, to: 30, r: 58, pos: () => [833, 325] },
+    { tier: 'medium', text: 'The teddy bear vanishes from the shelf partway through', t: 20, from: 13, to: 30, r: 64, pos: () => [1040, 372] },
+    { tier: 'easy',   text: 'The green balloon is missing', t: 5, from: 0, to: 30, r: 54, pos: () => [1345, 482] }
+  ];
+  const PTS = { easy: 1, medium: 2, hard: 3 };
+
+  // ---------- state ----------
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  let st = store.get('bsd-state') || { revealed: {}, found: {} };
+  const save = () => store.set('bsd-state', st);
+  let phase = 'intro', t = 0, playing = false, variant = 'A', focus = null, gapT = 0, stopAtEnd = false;
+
+  function setPhase(p) {
+    phase = p;
+    $('intro').classList.toggle('hidden', p !== 'intro');
+    $('gap').classList.toggle('hidden', p !== 'gap');
+    $('strip').classList.toggle('hidden', p !== 'end');
+    ui();
+  }
+  function play(v, from = 0, p = v === 'A' ? 'A' : 'B') { variant = v; t = from; playing = true; setPhase(p); }
+
+  function ui() {
+    const tag = $('tag');
+    const review = phase === 'review' || phase === 'end';
+    tag.textContent = phase === 'B' ? 'SPOT THE DIFFERENCE' : review ? (variant === 'A' ? 'ORIGINAL' : 'CHANGED') : 'ORIGINAL';
+    tag.classList.toggle('b', variant === 'B');
+    $('playBtn').textContent = playing ? '⏸ Pause' : '▶ Play';
+    $('playBtn').disabled = phase === 'intro' || phase === 'gap';
+    $('skipBtn').disabled = !(phase === 'A' || phase === 'B' || phase === 'gap');
+    $('cmpBtn').disabled = !review;
+    $('cmpBtn').textContent = variant === 'A' ? '⇄ Show changed' : '⇄ Show original';
+    $('scrub').disabled = !review;
+    let uk = 0, co = 0;
+    DIFFS.forEach((d, i) => { const f = st.found[i] || {}; if (f.uk) uk += PTS[d.tier]; if (f.co) co += PTS[d.tier]; });
+    $('ukScore').textContent = uk; $('coScore').textContent = co;
+    renderList();
+  }
+
+  function renderList() {
+    const list = $('list'); list.innerHTML = '';
+    DIFFS.forEach((d, i) => {
+      const shown = !!st.revealed[i], f = st.found[i] || {};
+      const el = document.createElement('div'); el.className = 'diff' + (focus === i ? ' on' : '');
+      el.innerHTML = `<div class="row"><span class="n">#${i + 1}</span><span class="chip ${d.tier}">${d.tier[0].toUpperCase() + d.tier.slice(1)} · ${PTS[d.tier]} pt${PTS[d.tier] > 1 ? 's' : ''}</span>
+        ${shown ? `<button class="t uk ${f.uk ? 'got' : ''}" title="UK spotted it">UK</button><button class="t co ${f.co ? 'got' : ''}" title="Colombia spotted it">COL</button>` : '<button class="rv">Reveal</button>'}</div>
+        ${shown ? `<div class="txt"></div>` : ''}`;
+      if (shown) el.querySelector('.txt').textContent = d.text;
+      el.onclick = e => {
+        if (e.target.classList.contains('t')) {
+          const k = e.target.classList.contains('uk') ? 'uk' : 'co';
+          st.found[i] = Object.assign({}, st.found[i], { [k]: !f[k] }); save(); ui(); return;
+        }
+        reveal(i);
+      };
+      list.appendChild(el);
+    });
+    const left = DIFFS.filter((_, i) => !st.revealed[i]).length;
+    $('revealAll').disabled = !left;
+  }
+
+  function reveal(i) {
+    st.revealed[i] = true; save();
+    focus = i; variant = 'B'; t = DIFFS[i].t; playing = false;
+    setPhase('review');
+  }
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (phase === 'gap') {
+      gapT += dt; $('gapN').textContent = Math.max(1, Math.ceil(GAP - gapT - 0.0001));
+      if (gapT >= GAP) play('B');
+    } else if (playing) {
+      t += dt;
+      if (t >= DUR) {
+        t = DUR - 0.001;
+        if (phase === 'A') { playing = false; gapT = 0; variant = 'B'; t = 0; setPhase('gap'); }
+        else if (phase === 'B') { playing = false; setPhase('end'); }
+        else { playing = false; ui(); }
+      }
+    }
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    scene(t, variant === 'B');
+    if (phase === 'review' || phase === 'end') {
+      DIFFS.forEach((d, i) => {
+        if (!st.revealed[i] || t < d.from || t > d.to) return;
+        const [x, y] = d.pos(t), pulse = Math.sin(performance.now() / 200) * 4;
+        ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(x, y, d.r + pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = focus === i ? '#F9DD28' : 'rgba(249,221,40,0.75)'; ctx.lineWidth = focus === i ? 9 : 6; ctx.stroke();
+        Ci(x + d.r * 0.72, y - d.r * 0.72, 20, '#F9DD28'); ctx.restore();
+        Tx(String(i + 1), x + d.r * 0.72, y - d.r * 0.72 + 1, 24, '#070f25');
+      });
+    }
+    const remain = phase === 'A' || phase === 'B' ? DUR - t : t;
+    $('clock').textContent = (phase === 'review' || phase === 'end') ? `${t.toFixed(1)}s` : `0:${String(Math.ceil(Math.max(0, remain))).padStart(2, '0')}`;
+    $('bar').style.width = (phase === 'gap' ? 0 : t / DUR * 100) + '%';
+    if (phase === 'review' || phase === 'end') $('scrub').value = t;
+  }
+
+  // ---------- controls ----------
+  $('startBtn').onclick = () => { focus = null; play('A'); };
+  $('againBtn').onclick = () => { focus = null; play('A'); };
+  $('playBtn').onclick = () => {
+    if (phase === 'end') { phase = 'review'; setPhase('review'); }
+    if (!playing && t >= DUR - 0.01) t = 0;
+    playing = !playing; ui();
+  };
+  $('skipBtn').onclick = () => {
+    if (phase === 'A') { playing = false; gapT = 0; variant = 'B'; t = 0; setPhase('gap'); }
+    else if (phase === 'gap') play('B');
+    else if (phase === 'B') { playing = false; t = DUR - 0.001; setPhase('end'); }
+  };
+  $('watchA').onclick = () => { variant = 'A'; t = 0; playing = true; setPhase('review'); };
+  $('watchB').onclick = () => { variant = 'B'; t = 0; playing = true; setPhase('review'); };
+  $('cmpBtn').onclick = () => { variant = variant === 'A' ? 'B' : 'A'; if (phase === 'end') setPhase('review'); else ui(); };
+  $('scrub').oninput = e => { t = +e.target.value; playing = false; if (phase === 'end') setPhase('review'); else ui(); };
+  $('revealAll').onclick = () => { DIFFS.forEach((_, i) => st.revealed[i] = true); save(); focus = null; variant = 'B'; playing = false; if (phase !== 'review') setPhase('review'); else ui(); };
+  $('newBtn').onclick = () => {
+    if (!confirm('Start a new game? This hides the differences and clears the scores.')) return;
+    st = { revealed: {}, found: {} }; save(); focus = null; playing = false; variant = 'A'; t = 0; setPhase('intro');
+  };
+  $('howBtn').onclick = () => $('how').classList.remove('hidden');
+  $('howClose').onclick = () => $('how').classList.add('hidden');
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { $('how').classList.add('hidden'); return; }
+    if (e.key === ' ' && !$('playBtn').disabled) { e.preventDefault(); $('playBtn').click(); }
+    if ((e.key === 'c' || e.key === 'C') && !$('cmpBtn').disabled) $('cmpBtn').click();
+  });
+
+  setPhase('intro');
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
