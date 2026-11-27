@@ -51,7 +51,7 @@
   .board h3 { margin: 0 0 4px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
   .board h3 button { padding: 3px 9px; font-size: 13px; }
   .board ol { margin: 0; padding-left: 22px; font-size: 15px; }
-  .board li { display: flex; justify-content: space-between; } .board li span { font-weight: 800; color: var(--yellow); }
+  .board li { display: flex; align-items: center; gap: 6px; } .board li em { flex: 1; font-style: normal; } .board .rm { padding: 0 6px; font-size: 12px; background: transparent; color: var(--muted); } .board .rm:hover { color: #fff; } .board li span { font-weight: 800; color: var(--yellow); }
   .board .none { font-size: 14px; color: var(--muted); }
   .addp { display: flex; gap: 6px; }
   .addp input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
@@ -90,7 +90,6 @@
   <div class="top">
     <h1>🔍 Spot the Difference: <span id="sceneName">Black Friday</span></h1>
     <div class="scenes" id="scenes"></div>
-    <button class="ghost" id="keyBtn" title="Opens the answers in a separate window. Share only the game window in Teams so nobody sees it.">🔑 Answer key</button>
     <button class="ghost" id="howBtn">❓ How to play</button>
     <button class="ghost" id="newBtn">↺ New game</button>
   </div>
@@ -921,7 +920,7 @@
     $('cmpBtn').textContent = variant === 'A' ? '⇄ Show changed' : '⇄ Show original';
     $('scrub').disabled = !review;
     const sc5 = scores(), medal = ['🥇', '🥈', '🥉'];
-    $('top').innerHTML = sc5.length ? sc5.slice(0, 5).map(([p, s], n) => `<li>${medal[n] || ''} ${esc(p)} <span>${s}</span></li>`).join('') : '<div class="none">Add players below to keep score.</div>';
+    $('top').innerHTML = sc5.length ? sc5.slice(0, 5).map(([p, s], n) => `<li><em>${medal[n] || ''} ${esc(p)}</em> <span>${s}</span><button class="rm" data-p="${esc(p)}" title="Remove ${esc(p)} from the game">✕</button></li>`).join('') : '<div class="none">Add players below to keep score.</div>';
     renderList();
     if (!$('lbView').classList.contains('hidden')) renderBoard();
   }
@@ -1033,21 +1032,22 @@
   $('pName').addEventListener('keydown', e => { if (e.key === 'Enter') addPlayers(); });
   $('lbBtn').onclick = () => { $('lbView').classList.remove('hidden'); renderBoard(); };
   $('lbClose').onclick = () => $('lbView').classList.add('hidden');
+  function removePlayer(p) {
+    all.players = all.players.filter(x => x !== p);
+    Object.keys(SCENES).forEach(k => Object.values(all[k].found).forEach(f => { if (f && f.p) f.p = f.p.filter(x => x !== p); }));
+    save(); ui();
+  }
+  $('top').onclick = e => {
+    const p = e.target.dataset && e.target.dataset.p; if (!p) return;
+    if (!confirm(`Remove ${p} from the game? Their points are removed too.`)) return;
+    removePlayer(p);
+  };
   $('lbList').onclick = e => {
     const p = e.target.dataset && e.target.dataset.p; if (!p) return;
     if (!confirm(`Remove ${p} from the game?`)) return;
-    all.players = all.players.filter(x => x !== p); save(); ui(); renderBoard();
+    removePlayer(p); renderBoard();
   };
   $('lbClear').onclick = () => { if (confirm('Remove all players and their scores?')) { all.players = []; Object.keys(SCENES).forEach(k => all[k].found = {}); save(); ui(); renderBoard(); } };
-  $('keyBtn').onclick = () => {
-    const w = window.open('', 'sd-answer-key', 'width=520,height=760');
-    if (!w) { alert('Your browser blocked the pop-up. Allow pop-ups for this site to see the answer key.'); return; }
-    const col = { easy: '#2AA845', medium: '#FF6E00', hard: '#C20D19' };
-    const body = Object.keys(SCENES).map(k => `<h2>${esc(SCENES[k].title)}</h2><ol>${SCENES[k].diffs.map((d, i) => `<li><span style="background:${col[tierOf(i, k)]}">${tierOf(i, k)} · ${PTS[tierOf(i, k)]}</span> ${esc(d.text)}</li>`).join('')}</ol>`).join('');
-    w.document.open();
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Answer key (host only)</title><style>body{font-family:Calibri,'Segoe UI',sans-serif;background:#0F1934;color:#fff;padding:6px 18px}h1{font-size:20px;color:#FF6E00}h2{font-size:18px;margin:16px 0 6px}li{margin:6px 0;font-size:16px}span{font-size:12px;font-weight:800;padding:2px 7px;border-radius:99px;margin-right:4px;text-transform:capitalize}p{color:#C5C4C2;font-size:14px}</style></head><body><h1>🔑 Answer key: host only</h1><p>The numbers match the list in the game. Keep this window off your Teams share.</p>${body}</body></html>`);
-    w.document.close();
-  };
   $('howBtn').onclick = () => $('how').classList.remove('hidden');
   $('howClose').onclick = () => $('how').classList.add('hidden');
   document.addEventListener('keydown', e => {
